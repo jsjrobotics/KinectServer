@@ -25,10 +25,12 @@
 package org.openkinect.freenect;
 
 import com.sun.jna.Structure;
+
+import java.io.Serializable;
 import java.util.List;
 import java.util.Arrays;
 
-public class FrameMode extends Structure {
+public class FrameMode extends Structure implements Serializable {
     public static final int FRAME_MODE_BYTE_LENGTH = 24;
     /* All fields are public because Structure requires it.
            However, fields should NOT be altered by external code. */

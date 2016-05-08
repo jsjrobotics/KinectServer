@@ -4,9 +4,12 @@ package com.spookybox.applications;
 import com.spookybox.camera.CameraManager;
 import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.camera.KinectFrame;
+import com.spookybox.camera.Serialization;
 import com.spookybox.util.Utils;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,7 +18,6 @@ public class RecordFramesApplication extends DefaultInstance{
     private static final String OUT_FILE = "kinect_run.out";
     protected final CameraManager mCameraManager;
     private final FileOutputStream mFileOutputStream;
-    private final ObjectOutputStream mObjectOutputStream;
     private LinkedBlockingQueue<CameraSnapShot> snapShots = new LinkedBlockingQueue<>();
     private Thread mSavingThread;
     private boolean savedSnapshot = false;
@@ -26,7 +28,6 @@ public class RecordFramesApplication extends DefaultInstance{
         try {
             mFileOutputStream = new FileOutputStream(OUT_FILE);
             System.out.println("Writing output to ->" + OUT_FILE);
-            mObjectOutputStream = new ObjectOutputStream(mFileOutputStream);
         } catch (java.io.IOException e) {
             e.printStackTrace();
             throw new IllegalAccessError("Couldn't open file output stream: "+e);
@@ -55,9 +56,7 @@ public class RecordFramesApplication extends DefaultInstance{
     private void stop() {
         mCameraManager.stop();
         Utils.joinThread(Optional.of(mSavingThread));
-
         try {
-            mObjectOutputStream.close();
             mFileOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,7 +69,7 @@ public class RecordFramesApplication extends DefaultInstance{
             while(!savedSnapshot) {
                 try {
                     CameraSnapShot snapShot = snapShots.take();
-                    if(snapShot.mDepthFrames.size() > 0){
+                    if(snapShot.mDepthFrames.size() > 0 && snapShot.mRgbFrames.size() > 0){
                         saveSnapshot(snapShot);
                         savedSnapshot = true;
                     }
@@ -83,7 +82,9 @@ public class RecordFramesApplication extends DefaultInstance{
 
     private void saveSnapshot(CameraSnapShot snapShot) {
         try {
-            mObjectOutputStream.writeObject(snapShot.mDepthFrames.get(0));
+            List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);
+            byte[] bytes = Utils.toByteArray(serialized);
+            mFileOutputStream.write(bytes);
         } catch (IOException e) {
             e.printStackTrace();
             throw new IOError(new Throwable("Failed to save snapshot: "+e));
@@ -97,31 +98,24 @@ public class RecordFramesApplication extends DefaultInstance{
 
     private void readSavedInput(){
         FileInputStream fileInputStream;
-        ObjectInputStream objectInputStream;
         try {
             fileInputStream = new FileInputStream(OUT_FILE);
             System.out.println("Reading input from ->" + OUT_FILE);
-            objectInputStream = new ObjectInputStream(fileInputStream);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Failed to create input streams");
             return;
         }
-        int objectsRead = 0;
-        while(!readSnapshot(objectInputStream).equals(Optional.empty())){
-            objectsRead += 1;
-        }
-        System.out.println("Read "+objectsRead+" objects");
-    }
-
-    private Optional<KinectFrame> readSnapshot(ObjectInputStream in){
+        List<Byte> read = new ArrayList<>();
         try {
-            return Optional.of( (KinectFrame) in.readObject() );
+            int nextByte = -1;
+            while((nextByte = fileInputStream.read()) != -1){
+                read.add((byte) nextByte);
+            }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
-        return Optional.empty();
+        CameraSnapShot snapShot = Serialization.byteListToCameraSnapShot(read);
+
     }
 }

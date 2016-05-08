@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -68,6 +69,20 @@ public class SerializationTest {
         List<Byte> serialized = Serialization.kinectFrameToByteList(mTestSubject);
         KinectFrame result = Serialization.byteListToKinectFrame(serialized);
         assertEquals(mTestSubject, result);
+    }
+
+    @Test
+    public void testCameraSnapShotToByteList(){
+        List<KinectFrame> rgbFrames = new ArrayList<>();
+        List<KinectFrame> depthFrames = new ArrayList<>();
+        rgbFrames.add(mTestSubject);
+        depthFrames.add(mTestSubject);
+
+        CameraSnapShot snapShot = new CameraSnapShot(rgbFrames, depthFrames);
+        List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);
+        CameraSnapShot result = Serialization.byteListToCameraSnapShot(serialized);
+        assertEquals(snapShot, result);
+
     }
 
     private int buildTimestamp() {

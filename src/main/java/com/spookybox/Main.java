@@ -7,8 +7,8 @@ import com.spookybox.applications.TestCameraManagerApplication;
 public class Main {
 
     private static ApplicationInstance instance =
-            //new RecordFramesApplication();
-             new TestCameraManagerApplication();
+            new RecordFramesApplication();
+             //new TestCameraManagerApplication();
 
     public static void main(String[] args){
         System.out.println("-- Application Start --");

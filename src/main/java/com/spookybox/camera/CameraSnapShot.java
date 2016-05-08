@@ -1,16 +1,9 @@
 package com.spookybox.camera;
 
-import com.spookybox.util.Functional;
-import com.spookybox.util.Utils;
-
-import java.io.IOException;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 
-public class CameraSnapShot implements Serializable{
+public class CameraSnapShot {
     public final List<KinectFrame> mRgbFrames = new ArrayList<>();
     public final List<KinectFrame> mDepthFrames = new ArrayList<>();
 
@@ -23,39 +16,37 @@ public class CameraSnapShot implements Serializable{
             mRgbFrames.add(f.clone());
         }
 
-        for(KinectFrame f : mDepthFrames){
+        for(KinectFrame f : depthFrames){
             mDepthFrames.add(f.clone());
         }
     }
 
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        int rgbFrames = mRgbFrames.size();
-        out.writeInt(rgbFrames);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        CameraSnapShot that = (CameraSnapShot) o;
 
         for(KinectFrame f : mRgbFrames){
-            out.write(Utils.toByteArray(Serialization.kinectFrameToByteList(f)));
+            if(!that.mRgbFrames.contains(f)){
+                return false;
+            }
         }
 
-        int depthFrames = mDepthFrames.size();
-        out.writeInt(depthFrames);
-        for(KinectFrame d : mDepthFrames){
-            out.write(Utils.toByteArray(Serialization.kinectFrameToByteList(d)));
+        for(KinectFrame f : mDepthFrames){
+            if(!that.mDepthFrames.contains(f)){
+                return false;
+            }
         }
+
+        return true;
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        int rgbFrames = in.readInt();
-        for(int index = 0; index < rgbFrames; index++){
-            byte[] serialized = (byte[]) in.readObject();
-            mRgbFrames.add(Serialization.byteListToKinectFrame(Utils.toByteList(serialized)));
-        }
-
-        int depthFrames = in.readInt();
-        for(int index = 0; index < depthFrames; index++){
-            byte[] serialized = (byte[]) in.readObject();
-            mDepthFrames.add(Serialization.byteListToKinectFrame(Utils.toByteList(serialized)));
-        }
+    @Override
+    public int hashCode() {
+        int result = mRgbFrames != null ? mRgbFrames.hashCode() : 0;
+        result = 31 * result + (mDepthFrames != null ? mDepthFrames.hashCode() : 0);
+        return result;
     }
-    private void readObjectNoData() throws ObjectStreamException {}
 }
