@@ -103,32 +103,7 @@ public class RecordFramesApplication extends DefaultInstance{
     }
 
     private void readSavedInput(){
-        FileInputStream fileInputStream;
-        BufferedInputStream inputStream;
-        try {
-            fileInputStream = new FileInputStream(OUT_FILE);
-            inputStream = new BufferedInputStream(fileInputStream);
-            System.out.println("Reading input from ->" + OUT_FILE);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Failed to create input streams");
-            return;
-        }
-        List<Byte> read = new ArrayList<>();
-        try {
-            int bytesRead = -1;
-            byte[] buffer = new byte[30 * Serialization.KINECT_FRAME_BYTE_LENGTH];
-            bytesRead = inputStream.read(buffer);
-            while(bytesRead != -1){
-                for(int i = 0; i < bytesRead; i++){
-                    read.add(buffer[i]);
-                }
-                bytesRead = inputStream.read(buffer);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Read " +read.size() + " bytes");
+        List<Byte> read = Utils.readInputFile(OUT_FILE);
         CameraSnapShot snapShot = Serialization.byteListToCameraSnapShot(read);
 
     }

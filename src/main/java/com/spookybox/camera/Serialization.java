@@ -14,7 +14,6 @@ public class Serialization {
     public static final int INT_BYTE_LENGTH = 4;
     public static final int SHORT_BYTE_LENGTH = 2;
     public static final int BOOLEAN_BYTE_LENGTH = 1;
-    public static final int KINECT_FRAME_BYTE_LENGTH = 38;
 
     public static List<Byte> shortToByteList(short value) {
         byte[] array = ByteBuffer.allocate(2).putShort(value).array();
@@ -149,20 +148,16 @@ public class Serialization {
     }
 
     public static ByteBuffer byteListToByteBuffer(List<Byte> in){
-        int index = 0;
-        List<Byte> sizeList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> bufferData = in.subList(index, in.size());
-
-        int size = byteListToInt(sizeList);
-        if(size != bufferData.size()){
-            throw new IllegalArgumentException("size not expected value: Expected "+size+" received "+bufferData.size());
-        }
-        ByteBuffer result = ByteBuffer.allocate(size);
-        for(byte b : bufferData){
+        ByteBuffer result = ByteBuffer.allocate(in.size());
+        for(byte b : in){
             result.put(b);
         }
         return result;
+    }
+
+    public static int extractBufferSize(final List<Byte> in, final int start){
+        List<Byte> sizeList = in.subList(start, start + INT_BYTE_LENGTH);
+        return byteListToInt(sizeList);
     }
 
     public static List<Byte> kinectFrameToByteList(KinectFrame f) {
@@ -182,21 +177,35 @@ public class Serialization {
 
     public static KinectFrame byteListToKinectFrame(List<Byte> in){
         int index = 0;
+
         List<Byte> isDepthFrameList = in.subList(index, index + BOOLEAN_BYTE_LENGTH);
         index += BOOLEAN_BYTE_LENGTH;
+
         List<Byte> modeList = in.subList(index, index + FrameMode.FRAME_MODE_BYTE_LENGTH);
         index += FrameMode.FRAME_MODE_BYTE_LENGTH;
+
         List<Byte> timeStampList = in.subList(index, index + INT_BYTE_LENGTH);
         index += INT_BYTE_LENGTH;
-        List<Byte> bufferList = new ArrayList<>();
-        for(int bufferIndex = index; bufferIndex < in.size(); bufferIndex += 1 ){
-            bufferList.add(in.get(bufferIndex));
-        }
+
+        List<Byte> bufferList = extractBufferList(in, index);
         boolean isDepthFrame = byteListToBoolean(isDepthFrameList);
         FrameMode frameMode = byteListToFrameMode(modeList);
         int timeStamp = byteListToInt(timeStampList);
         ByteBuffer byteBuffer = byteListToByteBuffer(bufferList);
         return new KinectFrame(isDepthFrame, frameMode, byteBuffer, timeStamp);
+    }
+
+
+    public static List<Byte> extractBufferList(final List<Byte> in, final int start) {
+        int index = start;
+        int size = extractBufferSize(in, start);
+        index += INT_BYTE_LENGTH;
+
+        List<Byte> bufferData = in.subList(index, index + size);
+        if(size != bufferData.size()){
+            throw new IllegalArgumentException("size not expected value: Expected "+size+" received "+bufferData.size());
+        }
+        return bufferData;
     }
 
     public static List<Byte> cameraSnapShotToByteList(CameraSnapShot snapShot) {
@@ -227,29 +236,21 @@ public class Serialization {
         index += INT_BYTE_LENGTH;
 
         int numDepthFrames = byteListToInt(numDepthFramesList);
-        List<Byte> depthFramesList = bytes.subList(index, index+ (numDepthFrames * KINECT_FRAME_BYTE_LENGTH));
-        index += numDepthFrames * KINECT_FRAME_BYTE_LENGTH;
-
         int numRgbFrames = byteListToInt(numRgbFramesList);
-        List<Byte> rgbFramesList = bytes.subList(index, index + (numRgbFrames * KINECT_FRAME_BYTE_LENGTH));
-        index += numRgbFrames * KINECT_FRAME_BYTE_LENGTH;
-
-        List<KinectFrame> depthFrames = new ArrayList<>();
-        int removeIndex = 0;
-        while(depthFrames.size() != numDepthFrames){
-            List<Byte> singleFrame = depthFramesList.subList(removeIndex, removeIndex + KINECT_FRAME_BYTE_LENGTH);
-            removeIndex += KINECT_FRAME_BYTE_LENGTH;
-            depthFrames.add(Serialization.byteListToKinectFrame(singleFrame));
-        }
-
-        List<KinectFrame> rgbFrames = new ArrayList<>();
-        removeIndex = 0;
-        while(rgbFrames.size() != numRgbFrames){
-            List<Byte> singleFrame = rgbFramesList.subList(removeIndex, removeIndex + KINECT_FRAME_BYTE_LENGTH);
-            removeIndex += KINECT_FRAME_BYTE_LENGTH;
-            rgbFrames.add(Serialization.byteListToKinectFrame(singleFrame));
-        }
-
+        List<KinectFrame> depthFrames = null;
+        List<KinectFrame> rgbFrames = null;
+        extractKinectFrames(bytes, index, numDepthFrames, numRgbFrames, depthFrames, rgbFrames);
         return new CameraSnapShot(rgbFrames, depthFrames);
+    }
+
+    private static void extractKinectFrames(List<Byte> bytes,
+                                            int start,
+                                            int numDepthFrames,
+                                            int numRgbFrames,
+                                            List<KinectFrame> depthFramesResult,
+                                            List<KinectFrame> rgbFramesResult) {
+        if(depthFramesResult != null || rgbFramesResult != null){
+            throw new IllegalArgumentException("Result lists must be null");
+        }
     }
 }

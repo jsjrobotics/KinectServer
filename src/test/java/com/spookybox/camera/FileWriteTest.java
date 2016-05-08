@@ -30,14 +30,7 @@ public class FileWriteTest {
         objectOutputStream.close();
         outputStream.close();
 
-        FileInputStream inputStream = new FileInputStream(SAVE_FILE);
-        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-        byte[] readBuffer = new byte[Serialization.KINECT_FRAME_BYTE_LENGTH];
-        objectInputStream.read(readBuffer);
-        objectInputStream.close();
-        inputStream.close();
-
-        List<Byte> byteList = Utils.toByteList(readBuffer);
+        List<Byte> byteList = Utils.readInputFile(SAVE_FILE);
         KinectFrame returnedValue = Serialization.byteListToKinectFrame(byteList);
         assertEquals(mTestSubject, returnedValue);
     }
