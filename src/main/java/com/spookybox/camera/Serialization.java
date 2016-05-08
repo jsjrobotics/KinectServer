@@ -156,7 +156,7 @@ public class Serialization {
 
         int size = byteListToInt(sizeList);
         if(size != bufferData.size()){
-            throw new IllegalArgumentException("size not expected value");
+            throw new IllegalArgumentException("size not expected value: Expected "+size+" received "+bufferData.size());
         }
         ByteBuffer result = ByteBuffer.allocate(size);
         for(byte b : bufferData){

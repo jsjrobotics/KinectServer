@@ -40,6 +40,9 @@ public class RecordFramesApplication extends DefaultInstance{
         mSavingThread.start();
         mCameraManager.startCapture((snapshot) -> {
             try {
+                if(savedSnapshot){
+                    return;
+                }
                 snapShots.put(snapshot);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -54,6 +57,7 @@ public class RecordFramesApplication extends DefaultInstance{
     }
 
     private void stop() {
+        snapShots.clear();
         mCameraManager.stop();
         Utils.joinThread(Optional.of(mSavingThread));
         try {
@@ -69,9 +73,10 @@ public class RecordFramesApplication extends DefaultInstance{
             while(!savedSnapshot) {
                 try {
                     CameraSnapShot snapShot = snapShots.take();
-                    if(snapShot.mDepthFrames.size() > 0 && snapShot.mRgbFrames.size() > 0){
-                        saveSnapshot(snapShot);
+                    if(snapShot.mDepthFrames.size() == 15 && snapShot.mRgbFrames.size() == 15){
                         savedSnapshot = true;
+                        System.out.println("Saving snapshot");
+                        saveSnapshot(snapShot);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -84,6 +89,7 @@ public class RecordFramesApplication extends DefaultInstance{
         try {
             List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);
             byte[] bytes = Utils.toByteArray(serialized);
+            System.out.println("Writing "+bytes.length);
             mFileOutputStream.write(bytes);
         } catch (IOException e) {
             e.printStackTrace();
@@ -98,8 +104,10 @@ public class RecordFramesApplication extends DefaultInstance{
 
     private void readSavedInput(){
         FileInputStream fileInputStream;
+        BufferedInputStream inputStream;
         try {
             fileInputStream = new FileInputStream(OUT_FILE);
+            inputStream = new BufferedInputStream(fileInputStream);
             System.out.println("Reading input from ->" + OUT_FILE);
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,13 +116,19 @@ public class RecordFramesApplication extends DefaultInstance{
         }
         List<Byte> read = new ArrayList<>();
         try {
-            int nextByte = -1;
-            while((nextByte = fileInputStream.read()) != -1){
-                read.add((byte) nextByte);
+            int bytesRead = -1;
+            byte[] buffer = new byte[30 * Serialization.KINECT_FRAME_BYTE_LENGTH];
+            bytesRead = inputStream.read(buffer);
+            while(bytesRead != -1){
+                for(int i = 0; i < bytesRead; i++){
+                    read.add(buffer[i]);
+                }
+                bytesRead = inputStream.read(buffer);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Read " +read.size() + " bytes");
         CameraSnapShot snapShot = Serialization.byteListToCameraSnapShot(read);
 
     }

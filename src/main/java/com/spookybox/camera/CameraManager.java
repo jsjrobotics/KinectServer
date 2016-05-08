@@ -133,4 +133,7 @@ public class CameraManager {
         mConsumerThread = Optional.empty();
     }
 
+    public boolean isStopping() {
+        return isTerminating;
+    }
 }
