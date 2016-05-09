@@ -77,7 +77,7 @@ public class SerializationTest {
         List<KinectFrame> rgbFrames = new ArrayList<>();
         List<KinectFrame> depthFrames = new ArrayList<>();
         rgbFrames.add(mTestSubject);
-        depthFrames.add(mTestSubject);
+        depthFrames.add(getAlternateKinectFrame());
 
         CameraSnapShot snapShot = new CameraSnapShot(rgbFrames, depthFrames);
         List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);

@@ -197,8 +197,8 @@ public class Serialization {
     public static List<Byte> extractBufferList(final List<Byte> in, final int start) {
         int index = start;
         int size = extractBufferSize(in, start);
-        if(size < 0){
-            throw new IllegalArgumentException("size < 0");
+        if(size < 0 || size + INT_BYTE_LENGTH > in.size()){
+            throw new IllegalArgumentException("invalid size received");
         }
         index += INT_BYTE_LENGTH;
 
@@ -244,7 +244,7 @@ public class Serialization {
         return new CameraSnapShot(rgbFrames, depthFrames);
     }
 
-    public static void extractKinectFrames(List<Byte> bytes,
+    public static int extractKinectFrames(List<Byte> bytes,
                                             int depthFramesStart,
                                             int numDepthFrames,
                                             int numRgbFrames,
@@ -253,11 +253,10 @@ public class Serialization {
         if(depthFramesResult == null || rgbFramesResult == null){
             throw new IllegalArgumentException("Result lists must not be null");
         }
-        depthFramesResult = new ArrayList<>();
-        rgbFramesResult = new ArrayList<>();
         int read = extractKinectFrame(bytes, depthFramesStart, depthFramesResult, numDepthFrames);
         int rgbFramesStart = depthFramesStart + read;
-        extractKinectFrame(bytes, rgbFramesStart, rgbFramesResult, numRgbFrames);
+        read += extractKinectFrame(bytes, rgbFramesStart, rgbFramesResult, numRgbFrames);
+        return read;
     }
 
     public static int extractKinectFrame(List<Byte> bytes,

@@ -7,32 +7,42 @@ import org.openkinect.freenect.FrameMode;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FileWriteTest {
     private final String SAVE_FILE = "fileWriteTest.out";
 
-    private KinectFrame mTestSubject;
+    private KinectFrame mKinectFrame1;
+    private KinectFrame mKinectFrame2;
+    private CameraSnapShot mSnapShot;
 
     @Before
     public void setUp(){
-        mTestSubject = new KinectFrame(true, buildFrameMode(), buildByteBuffer(), buildTimestamp());
+        mKinectFrame1 = new KinectFrame(true, buildFrameMode(), buildByteBuffer(), buildTimestamp());
+        mKinectFrame2 = new KinectFrame(false, buildAlternateFrameMode(), buildByteBuffer(), buildTimestamp());
+        List<KinectFrame> rgbFrames = new ArrayList<>();
+        List<KinectFrame> depthFrames = new ArrayList<>();
+        depthFrames.add(mKinectFrame1);
+        rgbFrames.add(mKinectFrame2);
+        mSnapShot = new CameraSnapShot(rgbFrames, depthFrames);
     }
 
     @Test
     public void testWriteToFile() throws IOException, ClassNotFoundException {
-        FileOutputStream outputStream = new FileOutputStream(SAVE_FILE);
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        byte[] buffer = Utils.toByteArray(Serialization.kinectFrameToByteList(mTestSubject));
-        objectOutputStream.write(buffer);
-        objectOutputStream.close();
-        outputStream.close();
-
+        File saveFile = new File(SAVE_FILE);
+        saveFile.delete();
+        byte[] buffer = Utils.toByteArray(Serialization.cameraSnapShotToByteList(mSnapShot));
+        Utils.write(saveFile, buffer);
         List<Byte> byteList = Utils.readInputFile(SAVE_FILE);
-        KinectFrame returnedValue = Serialization.byteListToKinectFrame(byteList);
-        assertEquals(mTestSubject, returnedValue);
+        for(int index = 0; index < buffer.length; index++){
+            assertTrue("Index: "+index + " doesn't match" ,buffer[index] == byteList.get(index));
+        }
+        CameraSnapShot returnedValue = Serialization.byteListToCameraSnapShot(byteList);
+        assertEquals(mSnapShot, returnedValue);
     }
 
     private int buildTimestamp() {
@@ -61,6 +71,21 @@ public class FileWriteTest {
         frameMode.paddingBitsPerPixel = 8;
         frameMode.framerate = 9;
         frameMode.valid = 10;
+        return frameMode;
+    }
+
+    private FrameMode buildAlternateFrameMode() {
+        FrameMode frameMode = new FrameMode();
+        frameMode.reserved = 11;
+        frameMode.resolution = 12;
+        frameMode.format = 13;
+        frameMode.bytes = 14;
+        frameMode.width = 15;
+        frameMode.height = 16;
+        frameMode.dataBitsPerPixel = 17;
+        frameMode.paddingBitsPerPixel = 18;
+        frameMode.framerate = 19;
+        frameMode.valid = 20;
         return frameMode;
     }
 }

@@ -1,8 +1,6 @@
 package com.spookybox.util;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +57,6 @@ public class Utils {
         try {
             fileInputStream = new FileInputStream(outFile);
             inputStream = new BufferedInputStream(fileInputStream);
-            System.out.println("Reading input from ->" + outFile);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Failed to create input streams");
@@ -79,7 +76,19 @@ public class Utils {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Read " +read.size() + " bytes");
         return read;
+    }
+
+    public static void write(File saveFile, byte[] buffer) {
+        try {
+            BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(saveFile));
+            outputStream.write(buffer);
+            outputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
