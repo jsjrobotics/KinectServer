@@ -2,12 +2,10 @@ package com.spookybox.camera;
 
 import org.openkinect.freenect.FrameMode;
 
-import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class Serialization {
 
@@ -199,6 +197,9 @@ public class Serialization {
     public static List<Byte> extractBufferList(final List<Byte> in, final int start) {
         int index = start;
         int size = extractBufferSize(in, start);
+        if(size < 0){
+            throw new IllegalArgumentException("size < 0");
+        }
         index += INT_BYTE_LENGTH;
 
         List<Byte> bufferData = in.subList(index, index + size);
@@ -237,20 +238,63 @@ public class Serialization {
 
         int numDepthFrames = byteListToInt(numDepthFramesList);
         int numRgbFrames = byteListToInt(numRgbFramesList);
-        List<KinectFrame> depthFrames = null;
-        List<KinectFrame> rgbFrames = null;
+        List<KinectFrame> depthFrames = new ArrayList<>();
+        List<KinectFrame> rgbFrames = new ArrayList<>();
         extractKinectFrames(bytes, index, numDepthFrames, numRgbFrames, depthFrames, rgbFrames);
         return new CameraSnapShot(rgbFrames, depthFrames);
     }
 
-    private static void extractKinectFrames(List<Byte> bytes,
-                                            int start,
+    public static void extractKinectFrames(List<Byte> bytes,
+                                            int depthFramesStart,
                                             int numDepthFrames,
                                             int numRgbFrames,
                                             List<KinectFrame> depthFramesResult,
                                             List<KinectFrame> rgbFramesResult) {
-        if(depthFramesResult != null || rgbFramesResult != null){
-            throw new IllegalArgumentException("Result lists must be null");
+        if(depthFramesResult == null || rgbFramesResult == null){
+            throw new IllegalArgumentException("Result lists must not be null");
         }
+        depthFramesResult = new ArrayList<>();
+        rgbFramesResult = new ArrayList<>();
+        int read = extractKinectFrame(bytes, depthFramesStart, depthFramesResult, numDepthFrames);
+        int rgbFramesStart = depthFramesStart + read;
+        extractKinectFrame(bytes, rgbFramesStart, rgbFramesResult, numRgbFrames);
+    }
+
+    public static int extractKinectFrame(List<Byte> bytes,
+                                          int framesStart,
+                                          final List<KinectFrame> result,
+                                          int framesToRead) {
+        if(result == null || !result.isEmpty()){
+            throw new IllegalArgumentException("Result must not be null");
+        }
+        int framesRead = 0;
+        int bytesRead = 0;
+        int index = framesStart;
+        while(index < bytes.size() && framesRead != framesToRead){
+            int startIndex = index;
+            List<Byte> isDepthFrameList = bytes.subList(index, index + BOOLEAN_BYTE_LENGTH);
+            boolean isDepthFrame = byteListToBoolean(isDepthFrameList);
+            index += BOOLEAN_BYTE_LENGTH;
+
+            List<Byte> modeList = bytes.subList(index, index + FrameMode.FRAME_MODE_BYTE_LENGTH);
+            FrameMode mode = byteListToFrameMode(modeList);
+            index += FrameMode.FRAME_MODE_BYTE_LENGTH;
+
+            List<Byte> timeStampList = bytes.subList(index, index + INT_BYTE_LENGTH);
+            int timeStamp = byteListToInt(timeStampList);
+            index += INT_BYTE_LENGTH;
+
+            List<Byte> bufferList = extractBufferList(bytes, index);
+            index += INT_BYTE_LENGTH;
+            ByteBuffer frame = byteListToByteBuffer(bufferList);
+            index += bufferList.size();
+
+            KinectFrame kinectFrame = new KinectFrame(isDepthFrame, mode, frame, timeStamp);
+            framesRead += 1;
+            result.add(kinectFrame);
+            bytesRead += index - startIndex;
+
+        }
+        return bytesRead;
     }
 }

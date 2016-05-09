@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SerializationTest {
 
@@ -85,6 +86,30 @@ public class SerializationTest {
 
     }
 
+    @Test
+    public void testExtractKinectFrame(){
+        List<Byte> serialized = Serialization.kinectFrameToByteList(mTestSubject);
+        List<KinectFrame> result = new ArrayList<>();
+        int bytesRead = Serialization.extractKinectFrame(serialized, 0, result, 1);
+        assertTrue("sizes differ", 1 == result.size());
+        assertTrue("Did not read all expected bytes" , serialized.size() == bytesRead);
+        assertTrue("Frame not found", result.contains(mTestSubject));
+
+        KinectFrame secondTestSubject = getAlternateKinectFrame();
+        serialized.addAll(Serialization.kinectFrameToByteList(secondTestSubject));
+        result.clear();
+        bytesRead = Serialization.extractKinectFrame(serialized, 0, result, 2);
+        assertTrue("sizes differ", 2 == result.size());
+        assertTrue("Did not read all expected bytes" , serialized.size() == bytesRead);
+        assertTrue("First Frame not found", result.contains(mTestSubject));
+        assertTrue("Second Frame not found", result.contains(secondTestSubject));
+
+    }
+
+    private KinectFrame getAlternateKinectFrame() {
+        return new KinectFrame(true, buildFrameMode(), buildAlternateByteBuffer(), buildTimestamp());
+    }
+
     private int buildTimestamp() {
         return -1;
     }
@@ -96,6 +121,17 @@ public class SerializationTest {
         buffer.put((byte) 2);
         buffer.put((byte) 3);
         buffer.put((byte) 4);
+        return buffer;
+    }
+
+    private ByteBuffer buildAlternateByteBuffer() {
+        ByteBuffer buffer = ByteBuffer.allocate(6);
+        buffer.put((byte) 5);
+        buffer.put((byte) 6);
+        buffer.put((byte) 7);
+        buffer.put((byte) 8);
+        buffer.put((byte) 9);
+        buffer.put((byte) 10);
         return buffer;
     }
 

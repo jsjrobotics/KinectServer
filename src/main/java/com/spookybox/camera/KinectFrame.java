@@ -28,7 +28,6 @@ public class KinectFrame implements Cloneable {
         mIsDepthFrame = isDepthFrame;
         mMode = clone(mode);
         mBuffer = clone(frame);
-
         mTimestamp = timestamp;
     }
 
