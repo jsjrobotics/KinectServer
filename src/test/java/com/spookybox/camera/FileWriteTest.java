@@ -35,13 +35,13 @@ public class FileWriteTest {
     public void testWriteToFile() throws IOException, ClassNotFoundException {
         File saveFile = new File(SAVE_FILE);
         saveFile.delete();
-        byte[] buffer = Utils.toByteArray(Serialization.cameraSnapShotToByteList(mSnapShot));
+        byte[] buffer = Utils.toByteArray(CameraSnapShot.cameraSnapShotToByteList(mSnapShot));
         Utils.write(saveFile, buffer);
         List<Byte> byteList = Utils.readInputFile(SAVE_FILE);
         for(int index = 0; index < buffer.length; index++){
             assertTrue("Index: "+index + " doesn't match" ,buffer[index] == byteList.get(index));
         }
-        CameraSnapShot returnedValue = Serialization.byteListToCameraSnapShot(byteList);
+        CameraSnapShot returnedValue = CameraSnapShot.byteListToCameraSnapShot(byteList);
         assertEquals(mSnapShot, returnedValue);
     }
 

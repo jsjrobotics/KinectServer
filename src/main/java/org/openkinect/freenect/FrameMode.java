@@ -24,9 +24,11 @@
  */
 package org.openkinect.freenect;
 
+import com.spookybox.camera.Serialization;
 import com.sun.jna.Structure;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 
@@ -44,6 +46,65 @@ public class FrameMode extends Structure implements Serializable {
 
     public FrameMode() {
         valid = 0;
+    }
+
+    public static List<Byte> frameModeToByteList(FrameMode mode) {
+        List<Byte> reserved = Serialization.intToByteList(mode.reserved);
+        List<Byte> resolution = Serialization.intToByteList(mode.resolution);
+        List<Byte> format = Serialization.intToByteList(mode.format);
+        List<Byte> bytes = Serialization.intToByteList(mode.bytes);
+        List<Byte> width = Serialization.shortToByteList(mode.width);
+        List<Byte> height = Serialization.shortToByteList(mode.height);
+
+
+
+        ArrayList<Byte> resultList = new ArrayList<>();
+        resultList.addAll(reserved);
+        resultList.addAll(resolution);
+        resultList.addAll(format);
+        resultList.addAll(bytes);
+        resultList.addAll(width);
+        resultList.addAll(height);
+        resultList.add(mode.dataBitsPerPixel);
+        resultList.add(mode.paddingBitsPerPixel);
+        resultList.add(mode.framerate);
+        resultList.add(mode.valid);
+        return resultList;
+    }
+
+    public static FrameMode byteListToFrameMode(List<Byte> in){
+        FrameMode frameMode = new FrameMode();
+        int index = 0;
+        List<Byte> reservedList = in.subList(index, index + Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+        List<Byte> resolutionList = in.subList(index, index + Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+        List<Byte> formatList = in.subList(index, index + Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+        List<Byte> bytesList = in.subList(index, index + Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+        List<Byte> widthList = in.subList(index, index + Serialization.SHORT_BYTE_LENGTH);
+        index += Serialization.SHORT_BYTE_LENGTH;
+        List<Byte> heightList = in.subList(index, index + Serialization.SHORT_BYTE_LENGTH);
+        index += Serialization.SHORT_BYTE_LENGTH;
+
+        frameMode.dataBitsPerPixel = in.get(index);
+        index += 1;
+        frameMode.paddingBitsPerPixel = in.get(index);
+        index += 1;
+        frameMode.framerate = in.get(index);
+        index += 1;
+        frameMode.valid = in.get(index);
+        index += 1;
+
+        frameMode.reserved = Serialization.byteListToInt(reservedList);
+        frameMode.resolution = Serialization.byteListToInt(resolutionList);
+        frameMode.format = Serialization.byteListToInt(formatList);
+        frameMode.bytes = Serialization.byteListToInt(bytesList);
+        frameMode.width = Serialization.byteListToShort(widthList);
+        frameMode.height = Serialization.byteListToShort(heightList);
+
+        return frameMode;
     }
 
     protected List getFieldOrder() {

@@ -21,6 +21,41 @@ public class CameraSnapShot {
         }
     }
 
+    public static List<Byte> cameraSnapShotToByteList(CameraSnapShot snapShot) {
+        int depthFrames = snapShot.mDepthFrames.size();
+        int rgbFrames = snapShot.mRgbFrames.size();
+        List<Byte> numDepthFrames = Serialization.intToByteList(depthFrames);
+        List<Byte> numRgbFrames = Serialization.intToByteList(rgbFrames);
+        List<Byte> kinectFrames = new ArrayList<>();
+        for(KinectFrame f : snapShot.mDepthFrames){
+            kinectFrames.addAll(KinectFrame.kinectFrameToByteList(f));
+        }
+
+        for(KinectFrame f : snapShot.mRgbFrames){
+            kinectFrames.addAll(KinectFrame.kinectFrameToByteList(f));
+        }
+        ArrayList<Byte> resultList = new ArrayList<>();
+        resultList.addAll(numDepthFrames);
+        resultList.addAll(numRgbFrames);
+        resultList.addAll(kinectFrames);
+        return resultList;
+    }
+
+    public static CameraSnapShot byteListToCameraSnapShot(List<Byte> bytes) {
+        int index = 0;
+        List<Byte> numDepthFramesList = bytes.subList(0, index+ Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+        List<Byte> numRgbFramesList = bytes.subList(index, index+ Serialization.INT_BYTE_LENGTH);
+        index += Serialization.INT_BYTE_LENGTH;
+
+        int numDepthFrames = Serialization.byteListToInt(numDepthFramesList);
+        int numRgbFrames = Serialization.byteListToInt(numRgbFramesList);
+        List<KinectFrame> depthFrames = new ArrayList<>();
+        List<KinectFrame> rgbFrames = new ArrayList<>();
+        Serialization.extractKinectFrames(bytes, index, numDepthFrames, numRgbFrames, depthFrames, rgbFrames);
+        return new CameraSnapShot(rgbFrames, depthFrames);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

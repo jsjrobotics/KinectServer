@@ -4,9 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openkinect.freenect.FrameMode;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +50,8 @@ public class SerializationTest {
     @Test
     public void testFrameModeToByteList() throws IOException {
         FrameMode testFrameMode = buildFrameMode();
-        List<Byte> serialized = Serialization.frameModeToByteList(testFrameMode);
-        FrameMode result = Serialization.byteListToFrameMode(serialized);
+        List<Byte> serialized = FrameMode.frameModeToByteList(testFrameMode);
+        FrameMode result = FrameMode.byteListToFrameMode(serialized);
         assertEquals(testFrameMode, result);
     }
 
@@ -67,8 +65,8 @@ public class SerializationTest {
 
     @Test
     public void testKinectFrameToByteList(){
-        List<Byte> serialized = Serialization.kinectFrameToByteList(mTestSubject);
-        KinectFrame result = Serialization.byteListToKinectFrame(serialized);
+        List<Byte> serialized = KinectFrame.kinectFrameToByteList(mTestSubject);
+        KinectFrame result = KinectFrame.byteListToKinectFrame(serialized);
         assertEquals(mTestSubject, result);
     }
 
@@ -80,15 +78,15 @@ public class SerializationTest {
         depthFrames.add(getAlternateKinectFrame());
 
         CameraSnapShot snapShot = new CameraSnapShot(rgbFrames, depthFrames);
-        List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);
-        CameraSnapShot result = Serialization.byteListToCameraSnapShot(serialized);
+        List<Byte> serialized = CameraSnapShot.cameraSnapShotToByteList(snapShot);
+        CameraSnapShot result = CameraSnapShot.byteListToCameraSnapShot(serialized);
         assertEquals(snapShot, result);
 
     }
 
     @Test
     public void testExtractKinectFrame(){
-        List<Byte> serialized = Serialization.kinectFrameToByteList(mTestSubject);
+        List<Byte> serialized = KinectFrame.kinectFrameToByteList(mTestSubject);
         List<KinectFrame> result = new ArrayList<>();
         int bytesRead = Serialization.extractKinectFrame(serialized, 0, result, 1);
         assertTrue("sizes differ", 1 == result.size());
@@ -96,7 +94,7 @@ public class SerializationTest {
         assertTrue("Frame not found", result.contains(mTestSubject));
 
         KinectFrame secondTestSubject = getAlternateKinectFrame();
-        serialized.addAll(Serialization.kinectFrameToByteList(secondTestSubject));
+        serialized.addAll(KinectFrame.kinectFrameToByteList(secondTestSubject));
         result.clear();
         bytesRead = Serialization.extractKinectFrame(serialized, 0, result, 2);
         assertTrue("sizes differ", 2 == result.size());

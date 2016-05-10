@@ -4,11 +4,9 @@ package com.spookybox.applications;
 import com.spookybox.camera.CameraManager;
 import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.camera.KinectFrame;
-import com.spookybox.camera.Serialization;
 import com.spookybox.util.Utils;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -87,7 +85,7 @@ public class RecordFramesApplication extends DefaultInstance{
 
     private void saveSnapshot(CameraSnapShot snapShot) {
         try {
-            List<Byte> serialized = Serialization.cameraSnapShotToByteList(snapShot);
+            List<Byte> serialized = CameraSnapShot.cameraSnapShotToByteList(snapShot);
             byte[] bytes = Utils.toByteArray(serialized);
             System.out.println("Writing "+bytes.length);
             mFileOutputStream.write(bytes);
@@ -104,7 +102,8 @@ public class RecordFramesApplication extends DefaultInstance{
 
     private void readSavedInput(){
         List<Byte> read = Utils.readInputFile(OUT_FILE);
-        CameraSnapShot snapShot = Serialization.byteListToCameraSnapShot(read);
+        CameraSnapShot snapShot = CameraSnapShot.byteListToCameraSnapShot(read);
+        System.out.println("Read snapshot with "+snapShot.mDepthFrames.size() + "depth, "+snapShot.mRgbFrames.size()+ " rgb frames");
 
     }
 }

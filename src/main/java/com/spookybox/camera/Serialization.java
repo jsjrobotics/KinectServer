@@ -71,66 +71,6 @@ public class Serialization {
         return true;
     }
 
-    public static List<Byte> frameModeToByteList(FrameMode mode) {
-        List<Byte> reserved = intToByteList(mode.reserved);
-        List<Byte> resolution = intToByteList(mode.resolution);
-        List<Byte> format = intToByteList(mode.format);
-        List<Byte> bytes = intToByteList(mode.bytes);
-        List<Byte> width = shortToByteList(mode.width);
-        List<Byte> height = shortToByteList(mode.height);
-
-
-
-        ArrayList<Byte> resultList = new ArrayList<>();
-        resultList.addAll(reserved);
-        resultList.addAll(resolution);
-        resultList.addAll(format);
-        resultList.addAll(bytes);
-        resultList.addAll(width);
-        resultList.addAll(height);
-        resultList.add(mode.dataBitsPerPixel);
-        resultList.add(mode.paddingBitsPerPixel);
-        resultList.add(mode.framerate);
-        resultList.add(mode.valid);
-        return resultList;
-    }
-
-    public static FrameMode byteListToFrameMode(List<Byte> in){
-        FrameMode frameMode = new FrameMode();
-        int index = 0;
-        List<Byte> reservedList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> resolutionList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> formatList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> bytesList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> widthList = in.subList(index, index + SHORT_BYTE_LENGTH);
-        index += SHORT_BYTE_LENGTH;
-        List<Byte> heightList = in.subList(index, index + SHORT_BYTE_LENGTH);
-        index += SHORT_BYTE_LENGTH;
-
-        frameMode.dataBitsPerPixel = in.get(index);
-        index += 1;
-        frameMode.paddingBitsPerPixel = in.get(index);
-        index += 1;
-        frameMode.framerate = in.get(index);
-        index += 1;
-        frameMode.valid = in.get(index);
-        index += 1;
-
-        frameMode.reserved = byteListToInt(reservedList);
-        frameMode.resolution = byteListToInt(resolutionList);
-        frameMode.format = byteListToInt(formatList);
-        frameMode.bytes = byteListToInt(bytesList);
-        frameMode.width = byteListToShort(widthList);
-        frameMode.height = byteListToShort(heightList);
-
-        return frameMode;
-    }
-
-
 
     public static List<Byte> byteBufferToByteList(ByteBuffer buffer) {
         byte[] array = buffer.array();
@@ -158,41 +98,6 @@ public class Serialization {
         return byteListToInt(sizeList);
     }
 
-    public static List<Byte> kinectFrameToByteList(KinectFrame f) {
-        List<Byte> isDepthFrame = booleanToByteList(f.isDepthFrame());
-        List<Byte> mode = frameModeToByteList(f.getMode());
-        List<Byte> timeStamp = intToByteList(f.getTimestamp());
-        List<Byte> buffer = byteBufferToByteList(f.getBuffer());
-
-        ArrayList<Byte> resultList = new ArrayList<>();
-        resultList.addAll(isDepthFrame);
-        resultList.addAll(mode);
-        resultList.addAll(timeStamp);
-        resultList.addAll(buffer);
-
-        return resultList;
-    }
-
-    public static KinectFrame byteListToKinectFrame(List<Byte> in){
-        int index = 0;
-
-        List<Byte> isDepthFrameList = in.subList(index, index + BOOLEAN_BYTE_LENGTH);
-        index += BOOLEAN_BYTE_LENGTH;
-
-        List<Byte> modeList = in.subList(index, index + FrameMode.FRAME_MODE_BYTE_LENGTH);
-        index += FrameMode.FRAME_MODE_BYTE_LENGTH;
-
-        List<Byte> timeStampList = in.subList(index, index + INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-
-        List<Byte> bufferList = extractBufferList(in, index);
-        boolean isDepthFrame = byteListToBoolean(isDepthFrameList);
-        FrameMode frameMode = byteListToFrameMode(modeList);
-        int timeStamp = byteListToInt(timeStampList);
-        ByteBuffer byteBuffer = byteListToByteBuffer(bufferList);
-        return new KinectFrame(isDepthFrame, frameMode, byteBuffer, timeStamp);
-    }
-
 
     public static List<Byte> extractBufferList(final List<Byte> in, final int start) {
         int index = start;
@@ -207,41 +112,6 @@ public class Serialization {
             throw new IllegalArgumentException("size not expected value: Expected "+size+" received "+bufferData.size());
         }
         return bufferData;
-    }
-
-    public static List<Byte> cameraSnapShotToByteList(CameraSnapShot snapShot) {
-        int depthFrames = snapShot.mDepthFrames.size();
-        int rgbFrames = snapShot.mRgbFrames.size();
-        List<Byte> numDepthFrames = Serialization.intToByteList(depthFrames);
-        List<Byte> numRgbFrames = Serialization.intToByteList(rgbFrames);
-        List<Byte> kinectFrames = new ArrayList<>();
-        for(KinectFrame f : snapShot.mDepthFrames){
-            kinectFrames.addAll(Serialization.kinectFrameToByteList(f));
-        }
-
-        for(KinectFrame f : snapShot.mRgbFrames){
-            kinectFrames.addAll(Serialization.kinectFrameToByteList(f));
-        }
-        ArrayList<Byte> resultList = new ArrayList<>();
-        resultList.addAll(numDepthFrames);
-        resultList.addAll(numRgbFrames);
-        resultList.addAll(kinectFrames);
-        return resultList;
-    }
-
-    public static CameraSnapShot byteListToCameraSnapShot(List<Byte> bytes) {
-        int index = 0;
-        List<Byte> numDepthFramesList = bytes.subList(0, index+INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-        List<Byte> numRgbFramesList = bytes.subList(index, index+INT_BYTE_LENGTH);
-        index += INT_BYTE_LENGTH;
-
-        int numDepthFrames = byteListToInt(numDepthFramesList);
-        int numRgbFrames = byteListToInt(numRgbFramesList);
-        List<KinectFrame> depthFrames = new ArrayList<>();
-        List<KinectFrame> rgbFrames = new ArrayList<>();
-        extractKinectFrames(bytes, index, numDepthFrames, numRgbFrames, depthFrames, rgbFrames);
-        return new CameraSnapShot(rgbFrames, depthFrames);
     }
 
     public static int extractKinectFrames(List<Byte> bytes,
@@ -276,7 +146,7 @@ public class Serialization {
             index += BOOLEAN_BYTE_LENGTH;
 
             List<Byte> modeList = bytes.subList(index, index + FrameMode.FRAME_MODE_BYTE_LENGTH);
-            FrameMode mode = byteListToFrameMode(modeList);
+            FrameMode mode = FrameMode.byteListToFrameMode(modeList);
             index += FrameMode.FRAME_MODE_BYTE_LENGTH;
 
             List<Byte> timeStampList = bytes.subList(index, index + INT_BYTE_LENGTH);
