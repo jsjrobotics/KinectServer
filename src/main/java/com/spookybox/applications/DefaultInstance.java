@@ -1,5 +1,6 @@
 package com.spookybox.applications;
 
+import com.spookybox.camera.CameraManager;
 import com.spookybox.tilt.TiltManager;
 import org.openkinect.freenect.Context;
 import org.openkinect.freenect.Device;
@@ -7,29 +8,53 @@ import org.openkinect.freenect.Freenect;
 
 public abstract class DefaultInstance implements ApplicationInstance {
 
-    protected TiltManager mTiltManager;
-    protected Context context;
-    protected Device mKinect;
+    protected final CameraManager mCameraManager;
+    protected final TiltManager mTiltManager;
+    protected final Context mContext;
+    protected final Device mKinect;
 
     public DefaultInstance(){
-        context = Freenect.createContext();
-        if(context == null){
-            throw new IllegalStateException("context is null");
+        if(!initCamera()){
+            mCameraManager = null;
+            mTiltManager = null;
+            mContext = null;
+            mKinect = null;
+            return;
         }
-        if (context.numDevices() > 0) {
-            mKinect = context.openDevice(0);
+        mContext = Freenect.createContext();
+        if(mContext == null){
+            throw new IllegalStateException("mContext is null");
+        }
+        if (mContext.numDevices() > 0) {
+            mKinect = mContext.openDevice(0);
         } else {
             throw new IllegalAccessError("No kinect detected.");
         }
         mTiltManager = new TiltManager(mKinect);
+        mCameraManager = new CameraManager(mKinect);
+
+    }
+
+    protected boolean initCamera(){
+        return true;
     }
 
     public final void shutdownKinect() {
+        if(!initCamera()){
+            return;
+        }
         mKinect.close();
-        context.shutdown();
+        mContext.shutdown();
     }
 
     protected void printTiltAngle() {
         System.out.println(" Current Tilt angle: " + mTiltManager.getTiltAngle());
+    }
+
+    @Override
+    public void haltCameraAndTilt(){
+        if(initCamera()){
+            mCameraManager.stop();
+        }
     }
 }

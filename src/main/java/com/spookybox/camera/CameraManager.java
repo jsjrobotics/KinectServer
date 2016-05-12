@@ -1,5 +1,6 @@
 package com.spookybox.camera;
 
+import com.spookybox.util.ThreadUtils;
 import com.spookybox.util.Utils;
 import org.openkinect.freenect.*;
 
@@ -9,7 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
-import static com.spookybox.util.Utils.sleep;
+import static com.spookybox.util.ThreadUtils.sleep;
 
 public class CameraManager {
     private final Device mKinect;
@@ -63,12 +64,12 @@ public class CameraManager {
         mRecentRgbFrames.clear();
         mRecentDepthFrames.clear();
         System.out.println("Depth ["+depthFrames.size() +"] - Video [" + rgbFrames.size() + "] @"+Utils.getUptime());
-        receiver.accept(new CameraSnapShot(depthFrames, rgbFrames));
+        receiver.accept(new CameraSnapShot(rgbFrames, depthFrames));
     }
 
     private void startRgbCapture() {
         Object awaitStart = new Object();
-        mKinect.setVideoFormat(VideoFormat.RGB, Resolution.MEDIUM);
+        mKinect.setVideoFormat(VideoFormat.RGB, Resolution.HIGH);
         mRgbThread = Optional.of(new Thread(() -> {
             VideoHandler receiver = (mode, frame, timestamp) -> {
                 if(isTerminating || frame == null){
@@ -125,9 +126,9 @@ public class CameraManager {
         isTerminating = true;
         mKinect.stopVideo();
         mKinect.stopDepth();
-        Utils.joinThread(mRgbThread);
-        Utils.joinThread(mDepthThread);
-        Utils.joinThread(mConsumerThread);
+        ThreadUtils.joinThread(mRgbThread);
+        ThreadUtils.joinThread(mDepthThread);
+        ThreadUtils.joinThread(mConsumerThread);
         mRgbThread = Optional.empty();
         mDepthThread = Optional.empty();
         mConsumerThread = Optional.empty();

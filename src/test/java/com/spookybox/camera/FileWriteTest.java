@@ -1,5 +1,6 @@
 package com.spookybox.camera;
 
+import com.spookybox.util.FileUtils;
 import com.spookybox.util.Utils;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,8 +37,8 @@ public class FileWriteTest {
         File saveFile = new File(SAVE_FILE);
         saveFile.delete();
         byte[] buffer = Utils.toByteArray(CameraSnapShot.cameraSnapShotToByteList(mSnapShot));
-        Utils.write(saveFile, buffer);
-        List<Byte> byteList = Utils.readInputFile(SAVE_FILE);
+        FileUtils.write(saveFile, buffer);
+        List<Byte> byteList = FileUtils.readInputFile(SAVE_FILE);
         for(int index = 0; index < buffer.length; index++){
             assertTrue("Index: "+index + " doesn't match" ,buffer[index] == byteList.get(index));
         }

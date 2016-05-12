@@ -1,16 +1,9 @@
 package com.spookybox.applications;
 
-import com.spookybox.camera.CameraManager;
-
-import static com.spookybox.util.Utils.sleep;
+import static com.spookybox.util.ThreadUtils.sleep;
 
 public class TestCameraManagerApplication extends DefaultInstance {
-    protected CameraManager mCameraManager;
 
-    public TestCameraManagerApplication(){
-        super();
-        mCameraManager = new CameraManager(mKinect);
-    }
     @Override
     public void run() {
         printTiltAngle();
@@ -24,11 +17,6 @@ public class TestCameraManagerApplication extends DefaultInstance {
         startCameraCapture();
         sleep(10000);
         stopCameraCapture();
-    }
-
-    @Override
-    public void haltCameraAndTilt(){
-        mCameraManager.stop();
     }
 
     protected void stopCameraCapture() {

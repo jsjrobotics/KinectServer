@@ -1,9 +1,9 @@
 package com.spookybox.applications;
 
 
-import com.spookybox.camera.CameraManager;
 import com.spookybox.camera.CameraSnapShot;
-import com.spookybox.camera.KinectFrame;
+import com.spookybox.util.FileUtils;
+import com.spookybox.util.ThreadUtils;
 import com.spookybox.util.Utils;
 
 import java.io.*;
@@ -12,9 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class RecordFramesApplication extends DefaultInstance{
-    private static final long TWENTY_SECONDS = 20000;
     private static final String OUT_FILE = "kinect_run.out";
-    protected final CameraManager mCameraManager;
     private final FileOutputStream mFileOutputStream;
     private LinkedBlockingQueue<CameraSnapShot> snapShots = new LinkedBlockingQueue<>();
     private Thread mSavingThread;
@@ -22,7 +20,6 @@ public class RecordFramesApplication extends DefaultInstance{
 
     public RecordFramesApplication() {
         super();
-        mCameraManager = new CameraManager(mKinect);
         try {
             mFileOutputStream = new FileOutputStream(OUT_FILE);
             System.out.println("Writing output to ->" + OUT_FILE);
@@ -48,7 +45,7 @@ public class RecordFramesApplication extends DefaultInstance{
             }
         });
         while(!savedSnapshot){
-            Utils.sleep(1000);
+            ThreadUtils.sleep(1000);
         }
         stop();
         readSavedInput();
@@ -57,7 +54,7 @@ public class RecordFramesApplication extends DefaultInstance{
     private void stop() {
         snapShots.clear();
         mCameraManager.stop();
-        Utils.joinThread(Optional.of(mSavingThread));
+        ThreadUtils.joinThread(Optional.of(mSavingThread));
         try {
             mFileOutputStream.close();
         } catch (IOException e) {
@@ -95,13 +92,8 @@ public class RecordFramesApplication extends DefaultInstance{
         }
     }
 
-    @Override
-    public void haltCameraAndTilt() {
-        mCameraManager.stop();
-    }
-
     private void readSavedInput(){
-        List<Byte> read = Utils.readInputFile(OUT_FILE);
+        List<Byte> read = FileUtils.readInputFile(OUT_FILE);
         CameraSnapShot snapShot = CameraSnapShot.byteListToCameraSnapShot(read);
         System.out.println("Read snapshot with "+snapShot.mDepthFrames.size() + "depth, "+snapShot.mRgbFrames.size()+ " rgb frames");
 

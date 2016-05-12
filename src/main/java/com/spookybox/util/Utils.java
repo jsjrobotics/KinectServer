@@ -3,22 +3,13 @@ package com.spookybox.util;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class Utils {
-    private static final long JOIN_TIMEOUT = 2000;
 
     public static long getUptime() {
         return ManagementFactory.getRuntimeMXBean().getUptime();
-    }
-
-    public static void sleep(long millis){
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public static byte[] toByteArray(List<Byte> input) {
@@ -37,58 +28,5 @@ public class Utils {
         return result;
     }
 
-    public static void joinThread(Optional<Thread> thread) {
-        thread.ifPresent(Utils::joinThread);
-    }
 
-    private static void joinThread(Thread thread){
-        try {
-            thread.join(JOIN_TIMEOUT);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.err.println("Interrupted waiting for thread to join: "+thread);
-
-        }
-    }
-
-    public static List<Byte> readInputFile(String outFile) {
-        FileInputStream fileInputStream;
-        BufferedInputStream inputStream;
-        try {
-            fileInputStream = new FileInputStream(outFile);
-            inputStream = new BufferedInputStream(fileInputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Failed to create input streams");
-            return null;
-        }
-        List<Byte> read = new ArrayList<>();
-        try {
-            int bytesRead = -1;
-            byte[] buffer = new byte[600];
-            bytesRead = inputStream.read(buffer);
-            while(bytesRead != -1){
-                for(int i = 0; i < bytesRead; i++){
-                    read.add(buffer[i]);
-                }
-                bytesRead = inputStream.read(buffer);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return read;
-    }
-
-    public static void write(File saveFile, byte[] buffer) {
-        try {
-            BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(saveFile));
-            outputStream.write(buffer);
-            outputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 }
