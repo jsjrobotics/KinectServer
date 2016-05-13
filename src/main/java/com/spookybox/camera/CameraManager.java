@@ -1,14 +1,17 @@
 package com.spookybox.camera;
 
+import com.spookybox.util.SelectiveReceiver;
 import com.spookybox.util.ThreadUtils;
 import com.spookybox.util.Utils;
 import org.openkinect.freenect.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static com.spookybox.util.ThreadUtils.sleep;
 
@@ -20,6 +23,8 @@ public class CameraManager {
     private Optional<Thread> mDepthThread = Optional.empty();
     private Optional<Thread> mRgbThread = Optional.empty();
     private Optional<Thread> mConsumerThread = Optional.empty();
+    private List<SelectiveReceiver<CameraSnapShot>> receiverList = new ArrayList<>();
+    private List<Runnable> mOnStartListeners = new ArrayList<>();
 
 
     public CameraManager(Device kinect){
@@ -32,19 +37,24 @@ public class CameraManager {
         stop();
     }
 
-    public void startCapture(final Consumer<CameraSnapShot> receiver){
+    public void startCapture(){
         isTerminating = false;
         startDepthCapture();
         startRgbCapture();
-        startConsumer(receiver);
+        startConsumer();
+        mOnStartListeners.forEach(Runnable::run);
+        mOnStartListeners.clear();
     }
 
-    private void startConsumer(final Consumer<CameraSnapShot> receiver) {
+    public void registerSnapshotReceiver(Consumer<CameraSnapShot> receiver, Predicate<CameraSnapShot> predicate){
+        receiverList.add(new SelectiveReceiver<>(receiver,predicate));
+    }
+    private void startConsumer() {
         mConsumerThread = Optional.of(new Thread(() -> {
             while(!isTerminating) {
                 try {
                     Thread.sleep(500);
-                    receiveFrames(receiver);
+                    receiveFrames( );
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -54,7 +64,7 @@ public class CameraManager {
         mConsumerThread.get().start();
     }
 
-    private void receiveFrames(Consumer<CameraSnapShot> receiver) {
+    private void receiveFrames() {
         if(mRecentDepthFrames.isEmpty() || mRecentRgbFrames.isEmpty()){
             return;
         }
@@ -64,7 +74,12 @@ public class CameraManager {
         mRecentRgbFrames.clear();
         mRecentDepthFrames.clear();
         System.out.println("Depth ["+depthFrames.size() +"] - Video [" + rgbFrames.size() + "] @"+Utils.getUptime());
-        receiver.accept(new CameraSnapShot(rgbFrames, depthFrames));
+        CameraSnapShot snapShot = new CameraSnapShot(rgbFrames, depthFrames);
+        for(SelectiveReceiver<CameraSnapShot> receiver : receiverList){
+            if(receiver.mPredicate.test(snapShot)){
+                receiver.mReceiver.accept(snapShot);
+            }
+        }
     }
 
     private void startRgbCapture() {
@@ -136,5 +151,18 @@ public class CameraManager {
 
     public boolean isStopping() {
         return isTerminating;
+    }
+
+    public int getAttachedKinects() {
+        return mKinect != null ? 1 : 0;
+    }
+
+    public void setOnStartListener(Runnable r) {
+        if(isTerminating == true){
+            mOnStartListeners.add(r);
+        }
+        else{
+            r.run();
+        }
     }
 }

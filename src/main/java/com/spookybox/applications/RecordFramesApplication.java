@@ -33,17 +33,21 @@ public class RecordFramesApplication extends DefaultInstance{
     public void run() {
         mSavingThread = buildPersistanceThread();
         mSavingThread.start();
-        mCameraManager.startCapture((snapshot) -> {
-            try {
-                if(savedSnapshot){
-                    return;
-                }
-                snapShots.put(snapshot);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.err.println("Failed to add received snapshot: "+e);
-            }
-        });
+        mCameraManager.registerSnapshotReceiver(
+                snapshot -> {
+                    try {
+                        if(savedSnapshot){
+                            return;
+                        }
+                        snapShots.put(snapshot);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        System.err.println("Failed to add received snapshot: "+e);
+                    }
+                },
+                snapShot -> true
+        );
+        mCameraManager.startCapture();
         while(!savedSnapshot){
             ThreadUtils.sleep(1000);
         }

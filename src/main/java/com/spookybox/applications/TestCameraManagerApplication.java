@@ -26,8 +26,7 @@ public class TestCameraManagerApplication extends DefaultInstance {
 
 
     protected void startCameraCapture(){
-        mCameraManager.startCapture((snapshot) -> {
-        });
+        mCameraManager.startCapture();
     }
 
 }
