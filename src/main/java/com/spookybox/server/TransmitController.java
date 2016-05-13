@@ -5,30 +5,30 @@ import com.spookybox.camera.CameraManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrasmitController extends Thread {
+public class TransmitController extends Thread {
 
-    private final List<CameraThread> cameraThreads = new ArrayList<>();
+    private final List<SnapShotTransmitThread> cameraThreads = new ArrayList<>();
     private final CameraManager mCameraManager;
 
-    public TrasmitController(String name, ArrayList<TcpServer> serverList, CameraManager cameraManager){
+    public TransmitController(String name, ArrayList<TcpServer> serverList, CameraManager cameraManager){
         super(name);
         mCameraManager = cameraManager;
-        int max = serverList.size();
-        if(max < cameraManager.getAttachedKinects()){
-            max = cameraManager.getAttachedKinects();
+        if(serverList.size() != 2 && serverList.size() != 3){
+            String errorMessage ="ServerList size must be 1 -> 3.\nlist[0] = rgbServer\nlist[1] = depthServer\n(optional) list[2] = otherServer";
+            throw new IllegalArgumentException(errorMessage);
         }
-        for(int index = 0; index < max; index ++){
-            CameraThread camera = new CameraThread(1,this,mCameraManager,serverList.get(index));
-            cameraThreads.add(camera);
-        }
+        TcpServer rgbServer = serverList.get(0);
+        TcpServer depthServer = serverList.get(1);
+        SnapShotTransmitThread camera = new SnapShotTransmitThread(1,this,mCameraManager, rgbServer, depthServer);
+        cameraThreads.add(camera);
     }
 
     @Override
     public void run() {
         for(int index =0; index < cameraThreads.size(); index++){
-            CameraThread camera = cameraThreads.get(index);
-            if(camera.readyToStart()){
-                camera.start();
+            SnapShotTransmitThread cameraThread = cameraThreads.get(index);
+            if(cameraThread.readyToStart()){
+                cameraThread.start();
             }
         }
 

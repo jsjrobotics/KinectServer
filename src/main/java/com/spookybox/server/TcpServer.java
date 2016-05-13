@@ -12,27 +12,28 @@ import java.util.List;
 public class TcpServer {
     private final int mPortNumber;
     private final ServerSocket mSocket;
+    private final String mServerName;
     private int clientsConnected = -1;
-    private final ConnectedListener mListener;
+    private final Runnable mListener;
     private List<Socket> clientSockets = new ArrayList<>();
     private List<BufferedOutputStream> outputStreams = new ArrayList<>();
     private List<BufferedReader> inputStreams = new ArrayList<>();
 
-    private final Thread serverThread = new Thread(new Runnable() {
+    private final Thread serverThread = new Thread(new java.lang.Runnable() {
         @Override
         public void run() {
             try {
                 while(true) {
-                    System.out.println("Waiting for client");
+                    System.out.println(mServerName + " Waiting for client");
                     Socket clientSocket = mSocket.accept();
-                    System.out.println("Client connected");
+                    System.out.println(mServerName + " Client connected");
                     clientsConnected += 1;
                     clientSockets.add(clientsConnected, clientSocket);
                     BufferedOutputStream outputStream = new BufferedOutputStream(clientSocket.getOutputStream(), 25344);
                     BufferedReader inputReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                     outputStreams.add(clientsConnected, outputStream);
                     inputStreams.add(clientsConnected, inputReader);
-                    mListener.connectionInitiated(clientsConnected);
+                    mListener.run();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -40,10 +41,11 @@ public class TcpServer {
         }
     });
 
-    public TcpServer(int port,ConnectedListener listener) throws IOException {
+    public TcpServer(String serverName, int port,Runnable listener) throws IOException {
         mPortNumber = port;
         mSocket = new ServerSocket(mPortNumber);
         mListener = listener;
+        mServerName = serverName;
     }
 
     public boolean isConnected(){

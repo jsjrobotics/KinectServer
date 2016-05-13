@@ -54,7 +54,7 @@ public class CameraManager {
             while(!isTerminating) {
                 try {
                     Thread.sleep(500);
-                    receiveFrames( );
+                    receiveFrames();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

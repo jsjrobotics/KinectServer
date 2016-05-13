@@ -4,14 +4,13 @@ import com.spookybox.camera.CameraManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ServerMain {
-    private final int firstPort = 4445;
+    private static final int FIRST_PORT = 4445;
     private int controllerInstances = 0;
     private ArrayList<TcpServer> servers = new ArrayList<>();
 
-    private  TrasmitController trasmitController;
+    private TransmitController transmitController;
     private final CameraManager mCameraManager;
 
     public ServerMain(CameraManager cameraManager){
@@ -25,28 +24,24 @@ public class ServerMain {
         });
     }
 
-    private  ConnectedListener listener = new ConnectedListener() {
-        @Override
-        public void connectionInitiated(int socketIndex) {
-            launchTransmitController();
-        }
-    };
-
-
     public void start() throws IOException {
-        int numberOfFeeds = mCameraManager.getAttachedKinects();
+        int numberOfFeeds = 2;
         for(int index=0; index< numberOfFeeds; index++){
-            TcpServer server = new TcpServer(firstPort+index, listener);
+            String serverName;
+            if(index == 0){
+                serverName = "RgbServer";
+            } else {
+                serverName = "DepthServer";
+            }
+            TcpServer server = new TcpServer(serverName, FIRST_PORT +index, () -> launchTransmitController());
             server.start();
             servers.add(server);
-
         }
-        launchTransmitController();
     }
 
     private  void launchTransmitController(){
-        trasmitController = new TrasmitController("TransmitController"+controllerInstances, servers, mCameraManager);
+        transmitController = new TransmitController("TransmitController"+controllerInstances, servers, mCameraManager);
         controllerInstances += 1;
-        trasmitController.start();
+        transmitController.start();
     }
 }
