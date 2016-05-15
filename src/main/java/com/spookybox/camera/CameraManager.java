@@ -46,9 +46,10 @@ public class CameraManager {
         mOnStartListeners.clear();
     }
 
-    public void registerSnapshotReceiver(Consumer<CameraSnapShot> receiver, Predicate<CameraSnapShot> predicate){
-        receiverList.add(new SelectiveReceiver<>(receiver,predicate));
+    public void registerSnapshotReceiver(SelectiveReceiver<CameraSnapShot> selectiveReceiver){
+        receiverList.add(selectiveReceiver);
     }
+
     private void startConsumer() {
         mConsumerThread = Optional.of(new Thread(() -> {
             while(!isTerminating) {

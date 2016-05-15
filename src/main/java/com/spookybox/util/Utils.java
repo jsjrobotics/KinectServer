@@ -28,5 +28,26 @@ public class Utils {
         return result;
     }
 
+    public static List<Integer> toIntegerList(int[] serialized) {
+        ArrayList<Integer> result = new ArrayList<>();
+        for(int index = 0; index < serialized.length; index++){
+            result.add(Integer.valueOf(serialized[index]));
+        }
+        return result;
+    }
+
+    public static int[][] toMatrix(List<Integer> bytes, int width, int height){
+        if(bytes.size() % width != 0){
+            System.out.println("Non square transformation -> " + bytes.size() % width + " ignored");
+        }
+        int[][] result = new int[height][width];
+        for(int widthIndex = 0; widthIndex < width; widthIndex++){
+            for(int heightIndex = 0; heightIndex < height; heightIndex++){
+                result[heightIndex][widthIndex] = bytes.get(width * heightIndex + widthIndex);
+            }
+        }
+        return result;
+    }
+
 
 }

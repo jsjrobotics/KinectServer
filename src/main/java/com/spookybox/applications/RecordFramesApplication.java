@@ -3,6 +3,7 @@ package com.spookybox.applications;
 
 import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.util.FileUtils;
+import com.spookybox.util.SelectiveReceiver;
 import com.spookybox.util.ThreadUtils;
 import com.spookybox.util.Utils;
 
@@ -29,11 +30,9 @@ public class RecordFramesApplication extends DefaultInstance{
         }
     }
 
-    @Override
-    public void run() {
-        mSavingThread = buildPersistanceThread();
-        mSavingThread.start();
-        mCameraManager.registerSnapshotReceiver(
+
+    private SelectiveReceiver<CameraSnapShot> getSnapshotReceiver(){
+        return new SelectiveReceiver<>(
                 snapshot -> {
                     try {
                         if(savedSnapshot){
@@ -47,6 +46,12 @@ public class RecordFramesApplication extends DefaultInstance{
                 },
                 snapShot -> true
         );
+    }
+    @Override
+    public void run() {
+        mSavingThread = buildPersistanceThread();
+        mSavingThread.start();
+        mCameraManager.registerSnapshotReceiver(getSnapshotReceiver());
         mCameraManager.startCapture();
         while(!savedSnapshot){
             ThreadUtils.sleep(1000);
