@@ -1,7 +1,7 @@
 package com.spookybox.camera;
 
 import com.spookybox.util.FileUtils;
-import com.spookybox.util.Utils;
+import com.spookybox.util.SerializationUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openkinect.freenect.FrameMode;
@@ -36,7 +36,7 @@ public class FileWriteTest {
     public void testWriteToFile() throws IOException, ClassNotFoundException {
         File saveFile = new File(SAVE_FILE);
         saveFile.delete();
-        byte[] buffer = Utils.toByteArray(CameraSnapShot.cameraSnapShotToByteList(mSnapShot));
+        byte[] buffer = SerializationUtils.toByteArray(CameraSnapShot.cameraSnapShotToByteList(mSnapShot));
         FileUtils.write(saveFile, buffer);
         List<Byte> byteList = FileUtils.readInputFile(SAVE_FILE);
         for(int index = 0; index < buffer.length; index++){

@@ -20,7 +20,7 @@ public class DisplayCamera extends DefaultInstance {
                 snapShot -> {
                     KinectFrame kinectFrame = snapShot.mRgbFrames.get(0);
                     KinectFrame kinectFrame1 = snapShot.mRgbFrames.get(1);
-                    BufferedImage image = ByteBufferToImage.convertToImage3(kinectFrame, kinectFrame1);
+                    BufferedImage image = ByteBufferToImage.convertRgbToImage(kinectFrame, kinectFrame1);
                     mRgbCanvas.setImage(image);
                     mRgbCanvas.repaint();
                 },

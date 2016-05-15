@@ -2,9 +2,7 @@ package com.spookybox.applications;
 
 import com.spookybox.camera.CameraManager;
 import com.spookybox.tilt.TiltManager;
-import org.openkinect.freenect.Context;
-import org.openkinect.freenect.Device;
-import org.openkinect.freenect.Freenect;
+import org.openkinect.freenect.*;
 
 public abstract class DefaultInstance implements ApplicationInstance {
 
@@ -26,6 +24,8 @@ public abstract class DefaultInstance implements ApplicationInstance {
             throw new IllegalStateException("mContext is null");
         }
         if (mContext.numDevices() > 0) {
+            //mContext.setLogHandler((dev, level, msg) -> System.out.println("--> "+msg+" <--"));
+            //mContext.setLogLevel(LogLevel.INFO);
             mKinect = mContext.openDevice(0);
         } else {
             throw new IllegalAccessError("No kinect detected.");

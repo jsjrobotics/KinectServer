@@ -2,16 +2,15 @@ package com.spookybox.camera;
 
 import com.spookybox.util.SelectiveReceiver;
 import com.spookybox.util.ThreadUtils;
-import com.spookybox.util.Utils;
+import com.spookybox.util.SerializationUtils;
 import org.openkinect.freenect.*;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static com.spookybox.util.ThreadUtils.sleep;
 
@@ -74,7 +73,7 @@ public class CameraManager {
         List<KinectFrame> rgbFrames = Arrays.asList(mRecentRgbFrames.toArray(typeParameter));
         mRecentRgbFrames.clear();
         mRecentDepthFrames.clear();
-        System.out.println("Depth ["+depthFrames.size() +"] - Video [" + rgbFrames.size() + "] @"+Utils.getUptime());
+        System.out.println("Depth ["+depthFrames.size() +"] - Video [" + rgbFrames.size() + "] @"+ getUptime());
         CameraSnapShot snapShot = new CameraSnapShot(rgbFrames, depthFrames);
         for(SelectiveReceiver<CameraSnapShot> receiver : receiverList){
             if(receiver.mPredicate.test(snapShot)){
@@ -83,9 +82,14 @@ public class CameraManager {
         }
     }
 
+    public static long getUptime() {
+        return ManagementFactory.getRuntimeMXBean().getUptime();
+    }
+
+
     private void startRgbCapture() {
         Object awaitStart = new Object();
-        mKinect.setVideoFormat(VideoFormat.RGB, Resolution.HIGH);
+        mKinect.setVideoFormat(VideoFormat.RGB, Resolution.MEDIUM);
         mRgbThread = Optional.of(new Thread(() -> {
             VideoHandler receiver = (mode, frame, timestamp) -> {
                 if(isTerminating || frame == null){

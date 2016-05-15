@@ -1,7 +1,8 @@
 package com.spookybox.graphics;
 
 import com.spookybox.camera.KinectFrame;
-import com.spookybox.util.Utils;
+import com.spookybox.camera.Serialization;
+import com.spookybox.util.SerializationUtils;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
@@ -55,13 +56,13 @@ public class ByteBufferToImage {
         int height = kinectFrame.getMode().getHeight();
         int[] array1 = convertToIntArray(kinectFrame.getBuffer());
         int[] array2 = convertToIntArray(kinectFrame1.getBuffer());
-        int[] array = zipArrays(array1, array2);
+        int[] array = appendArray(array1, array2);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         image.setRGB(0,0,width,height,array,0,width);
         return image;
     }
 
-    private static int[] zipArrays(int[] array1, int[] array2) {
+    private static int[] appendArray(int[] array1, int[] array2) {
         int[] array = new int[array1.length + array2.length];
 
         int array1Index = 0;
@@ -79,6 +80,29 @@ public class ByteBufferToImage {
         return array;
     }
 
+    public static BufferedImage convertRgbToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
+        List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
+        List<Byte> kinectList2 = Serialization.byteBufferToByteList(kinectFrame1.getBuffer());
+        List<Byte> input = new ArrayList<>();
+        for(Byte b : kinectList1){
+            input.add(b);
+        }
+        for(Byte b : kinectList2){
+            input.add(b);
+        }
+        int[] array = new int[input.size()/3];
+        for(int index = 0; index < array.length; index++){
+            int base = index*3;
+            array[index] = input.get(base) << 24| input.get(base+1) << 16 | input.get(base+2) << 8;
+        }
+
+        int width = kinectFrame.getMode().width;
+        int height = kinectFrame.getMode().height;
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        image.setRGB(0,0,width,height,array,0,width);
+        return image;
+    }
+
     public static BufferedImage convertToImage3(KinectFrame kinectFrame, KinectFrame kinectFrame1){
         int width = kinectFrame.getMode().getWidth();
         int height = kinectFrame.getMode().getHeight();
@@ -89,9 +113,9 @@ public class ByteBufferToImage {
     public static int[][] convertToMatrix(KinectFrame kinectFrame, KinectFrame kinectFrame1, int width, int height) {
         int[] array1 = convertToIntArray(kinectFrame.getBuffer());
         int[] array2 = convertToIntArray(kinectFrame1.getBuffer());
-        int[] array = zipArrays(array1, array2);
-        List<Integer> serialized = Utils.toIntegerList(array);
-        int[][] matrix = Utils.toMatrix(serialized, width, height);
+        int[] array = appendArray(array1, array2);
+        List<Integer> serialized = SerializationUtils.toIntegerList(array);
+        int[][] matrix = SerializationUtils.toMatrix(serialized, width, height);
         return matrix;
     }
 

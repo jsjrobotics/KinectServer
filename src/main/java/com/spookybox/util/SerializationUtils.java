@@ -6,11 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Utils {
-
-    public static long getUptime() {
-        return ManagementFactory.getRuntimeMXBean().getUptime();
-    }
+public class SerializationUtils {
 
     public static byte[] toByteArray(List<Byte> input) {
         byte[] bytes = new byte[input.size()];

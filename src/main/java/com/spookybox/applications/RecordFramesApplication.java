@@ -5,7 +5,7 @@ import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.util.FileUtils;
 import com.spookybox.util.SelectiveReceiver;
 import com.spookybox.util.ThreadUtils;
-import com.spookybox.util.Utils;
+import com.spookybox.util.SerializationUtils;
 
 import java.io.*;
 import java.util.List;
@@ -92,7 +92,7 @@ public class RecordFramesApplication extends DefaultInstance{
     private void saveSnapshot(CameraSnapShot snapShot) {
         try {
             List<Byte> serialized = CameraSnapShot.cameraSnapShotToByteList(snapShot);
-            byte[] bytes = Utils.toByteArray(serialized);
+            byte[] bytes = SerializationUtils.toByteArray(serialized);
             System.out.println("Writing "+bytes.length);
             mFileOutputStream.write(bytes);
         } catch (IOException e) {
