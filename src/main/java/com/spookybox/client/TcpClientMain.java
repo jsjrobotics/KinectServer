@@ -2,27 +2,21 @@ package com.spookybox.client;
 
 import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.camera.KinectFrame;
-import com.spookybox.camera.Serialization;
 import com.spookybox.graphics.ByteBufferToImage;
 import com.spookybox.graphics.DisplayCanvas;
 
-import javax.swing.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TcpClientMain {
     private final int port;
     private String IP_ADDRESS = "192.168.1.6";
-    private DisplayCanvas mCanvas;
+    private DisplayCanvas mRgbCanvas;
 
     public static void main(String[] args) {
         new TcpClientMain(4445).start();
@@ -33,7 +27,8 @@ public class TcpClientMain {
 
 
     public  void start(){
-        mCanvas = DisplayCanvas.initWindow();
+        DisplayCanvas[] canvases = DisplayCanvas.initWindow();
+        mRgbCanvas = canvases[0];
         Runnable r = () -> startClient(port);
         Thread t = new Thread(r);
         t.start();
@@ -70,7 +65,7 @@ public class TcpClientMain {
     private void drawImage(CameraSnapShot cameraSnapShot){
         KinectFrame frame1 = cameraSnapShot.mRgbFrames.get(0);
         KinectFrame frame2 = cameraSnapShot.mRgbFrames.get(1);
-        mCanvas.setImage(ByteBufferToImage.convertToImage2(frame1, frame2));
+        mRgbCanvas.setImage(ByteBufferToImage.convertToImage2(frame1, frame2));
     }
 
 

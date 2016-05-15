@@ -15,17 +15,18 @@ import static com.spookybox.util.ThreadUtils.sleep;
 public class DisplayRecordedInputApplication extends DefaultInstance {
     private static final String IN_FILE = "kinect_run.out";
     private Optional<CameraSnapShot> mSnapShot;
-    private DisplayCanvas mCanvas;
+    private DisplayCanvas mRgbCanvas;
 
     @Override
     public void run() {
-        mCanvas = DisplayCanvas.initWindow();
+        DisplayCanvas[] canvases = DisplayCanvas.initWindow();
+        mRgbCanvas = canvases[0];
         mSnapShot = readSavedInput();
         mSnapShot.ifPresent(snapShot -> {
             for(int index = 0; index < snapShot.mRgbFrames.size()-1; index += 2){
                 BufferedImage image = ByteBufferToImage.convertToImage(snapShot.mRgbFrames.get(index), snapShot.mRgbFrames.get(index+1));
-                mCanvas.setImage(image);
-                mCanvas.repaint();
+                mRgbCanvas.setImage(image);
+                mRgbCanvas.repaint();
                 sleep(500);
             }
         });

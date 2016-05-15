@@ -96,12 +96,13 @@ public class ByteBufferToImage {
     }
 
     public static BufferedImage matrixToImage(int[][] matrix){
-        int width = matrix[0].length / 2;
-        int height = matrix.length / 2;
+        int[][] rgbMatrix = rggbMatrixToRgb(matrix);
+        int width = rgbMatrix[0].length;
+        int height = rgbMatrix.length;
         int[] array = new int[width * height];
-        for(int widthIndex = 0; widthIndex < width; widthIndex++){
-            for(int heightIndex = 0; heightIndex < height; heightIndex++){
-                array[heightIndex*width + widthIndex] = getPixelFromRGGBMatrix(matrix,widthIndex,heightIndex);
+        for(int index = 0; index < height; index++){
+            for(int index2=0; index2 < width; index2++){
+                array[index*width+index2] = rgbMatrix[index][index2];
             }
         }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -109,11 +110,36 @@ public class ByteBufferToImage {
         return image;
     }
 
-    public static int getPixelFromRGGBMatrix(int[][] matrix, int startWidth, int startHeight){
-        int red = matrix[startHeight][startWidth*2];
-        int green = matrix[startHeight+1][startWidth];
-        int blue = matrix[startHeight+1][startWidth+1];
-        return red | green | blue;
+    public static int[][] rggbMatrixToRgb(int[][] matrix){
+        if(matrix.length % 2 != 0){
+            throw new IllegalArgumentException("invalid height");
+        }
+        if(matrix[0].length % 2 != 0){
+            throw new IllegalArgumentException("invalid width");
+        }
+        int width = matrix[0].length / 2;
+        int height = matrix.length /2;
+        int[][] result = new int[height][width];
+        for(int widthIndex =0; widthIndex < width; widthIndex++){
+            for(int heightIndex = 0; heightIndex < height; heightIndex++){
+                int[][] input = {
+                        { matrix[heightIndex*2][widthIndex*2]  , matrix[heightIndex*2][widthIndex*2]     },
+                        { matrix[heightIndex*2+1][widthIndex*2], matrix[heightIndex*2+1][widthIndex*2+1] }
+                };
+                result[heightIndex][widthIndex] = rggbToRgbPixel(input);
+            }
+        }
+        return result;
+    }
+
+    private static int rggbToRgbPixel(int[][] rggbMatrix) {
+        if(rggbMatrix.length != 2){
+            throw new IllegalArgumentException("invalid rggbMatrix height");
+        }
+        if(rggbMatrix[0].length != 2){
+            throw new IllegalArgumentException("invalid rggbMatrix width");
+        }
+        return rggbMatrix[0][0] | rggbMatrix[0][1] | rggbMatrix[1][1];
     }
 
     public static int[] convertToIntArray(ByteBuffer buffer){

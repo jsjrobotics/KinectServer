@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class DisplayCanvas extends JComponent {
+public class DisplayCanvas extends Component {
     private BufferedImage mImage;
 
 
@@ -25,13 +25,18 @@ public class DisplayCanvas extends JComponent {
         g2.finalize();
     }
 
-    public static DisplayCanvas initWindow() {
-        DisplayCanvas canvas = new DisplayCanvas();
+    public static DisplayCanvas[] initWindow() {
+        DisplayCanvas rgbCanvas = new DisplayCanvas();
+        DisplayCanvas depthCanvas = new DisplayCanvas();
         JFrame window = new JFrame();
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setBounds(30, 30, 640, 480);
-        window.getContentPane().add(canvas);
+        JPanel contentPane = new JPanel(new GridLayout(0, 2));
+        contentPane.add(rgbCanvas);
+        contentPane.add(depthCanvas);
+        window.setContentPane(contentPane);
         window.setVisible(true);
-        return canvas;
+        DisplayCanvas[] result =  {rgbCanvas, depthCanvas};
+        return result;
     }
 }
