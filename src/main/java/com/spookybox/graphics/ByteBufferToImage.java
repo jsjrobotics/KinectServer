@@ -9,76 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-    https://openkinect.org/wiki/Protocol_Documentation#RGB_Camera
-    for (int p = 0, bit_offset = 0; p < 640*480; p++, bit_offset += 11) {
-       uint32_t pixel = 0; // value of pixel
-
-       pixel   = *((uint32_t *)(data+(p*11/8)));
-       pixel >>= (p*11 % 8);
-       pixel  &= 0x7ff;
-
-       uint8_t pix_low  = (pixel & 0x00ff) >> 0;
-       uint8_t pix_high = (pixel & 0xff00) >> 8;
-
-       pix_low  = reverse[pix_low];
-       pix_high = reverse[pix_high];
-
-       pixel = (pix_low << 8) | (pix_high);
-       pixel >>= 5;
-
-       // Image drops the 3 MSbs
-       rgb[3*p+0] = 255-pixel;
-       rgb[3*p+1] = 255-pixel;
-       rgb[3*p+2] = 255-pixel;
-     }
-     */
 public class ByteBufferToImage {
-    public static BufferedImage convertToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1) {
-        int width = kinectFrame.getMode().getWidth();
-        int height = kinectFrame.getMode().getHeight();
-        int[] array1 = convertToIntArray(kinectFrame.getBuffer());
-        int[] array2 = convertToIntArray(kinectFrame1.getBuffer());
-        int[] array = new int[array1.length + array2.length];
-        for(int index = 0; index < array1.length; index++){
-            array[index] = array1[index];
-        }
-        for(int index = 0; index < array2.length; index++){
-            array[array1.length + index] = array2[index];
-        }
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        image.setRGB(0,0,width,height,array,0,width);
-        return image;
-    }
-
-    public static BufferedImage convertToImage2(KinectFrame kinectFrame, KinectFrame kinectFrame1) {
-        int width = kinectFrame.getMode().getWidth();
-        int height = kinectFrame.getMode().getHeight();
-        int[] array1 = convertToIntArray(kinectFrame.getBuffer());
-        int[] array2 = convertToIntArray(kinectFrame1.getBuffer());
-        int[] array = appendArray(array1, array2);
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        image.setRGB(0,0,width,height,array,0,width);
-        return image;
-    }
-
-    private static int[] appendArray(int[] array1, int[] array2) {
-        int[] array = new int[array1.length + array2.length];
-
-        int array1Index = 0;
-        int array2Index = 0;
-        for(int index = 0; index < array.length; index++){
-            if(index % 2 == 0){
-                array[index] = array1[array1Index];
-                array1Index += 1;
-            }
-            else {
-                array[index] = array2[array2Index];
-                array2Index += 1;
-            }
-        }
-        return array;
-    }
 
     public static BufferedImage convertRgbToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
         List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
@@ -103,67 +34,26 @@ public class ByteBufferToImage {
         return image;
     }
 
-    public static BufferedImage convertToImage3(KinectFrame kinectFrame, KinectFrame kinectFrame1){
-        int width = kinectFrame.getMode().getWidth();
-        int height = kinectFrame.getMode().getHeight();
-        int[][] array = convertToMatrix(kinectFrame, kinectFrame1, width, height);
-        return matrixToImage(array);
-    }
-
-    public static int[][] convertToMatrix(KinectFrame kinectFrame, KinectFrame kinectFrame1, int width, int height) {
-        int[] array1 = convertToIntArray(kinectFrame.getBuffer());
-        int[] array2 = convertToIntArray(kinectFrame1.getBuffer());
-        int[] array = appendArray(array1, array2);
-        List<Integer> serialized = SerializationUtils.toIntegerList(array);
-        int[][] matrix = SerializationUtils.toMatrix(serialized, width, height);
-        return matrix;
-    }
-
-    public static BufferedImage matrixToImage(int[][] matrix){
-        int[][] rgbMatrix = rggbMatrixToRgb(matrix);
-        int width = rgbMatrix[0].length;
-        int height = rgbMatrix.length;
-        int[] array = new int[width * height];
-        for(int index = 0; index < height; index++){
-            for(int index2=0; index2 < width; index2++){
-                array[index*width+index2] = rgbMatrix[index][index2];
-            }
+    public static BufferedImage convertDepthToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
+        List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
+        List<Byte> kinectList2 = Serialization.byteBufferToByteList(kinectFrame1.getBuffer());
+        List<Byte> input = new ArrayList<>();
+        for(Byte b : kinectList1){
+            input.add(b);
         }
+        for(Byte b : kinectList2){
+            input.add(b);
+        }
+        int[] array = new int[422400];
+        for(int index = 0; index < 422400; index+=2){
+            int base = index*2;
+            array[index] = input.get(base) << 8| input.get(base+1);
+        }
+        int width = kinectFrame.getMode().width;
+        int height = kinectFrame.getMode().height;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         image.setRGB(0,0,width,height,array,0,width);
         return image;
-    }
-
-    public static int[][] rggbMatrixToRgb(int[][] matrix){
-        if(matrix.length % 2 != 0){
-            throw new IllegalArgumentException("invalid height");
-        }
-        if(matrix[0].length % 2 != 0){
-            throw new IllegalArgumentException("invalid width");
-        }
-        int width = matrix[0].length / 2;
-        int height = matrix.length /2;
-        int[][] result = new int[height][width];
-        for(int widthIndex =0; widthIndex < width; widthIndex++){
-            for(int heightIndex = 0; heightIndex < height; heightIndex++){
-                int[][] input = {
-                        { matrix[heightIndex*2][widthIndex*2]  , matrix[heightIndex*2][widthIndex*2]     },
-                        { matrix[heightIndex*2+1][widthIndex*2], matrix[heightIndex*2+1][widthIndex*2+1] }
-                };
-                result[heightIndex][widthIndex] = rggbToRgbPixel(input);
-            }
-        }
-        return result;
-    }
-
-    private static int rggbToRgbPixel(int[][] rggbMatrix) {
-        if(rggbMatrix.length != 2){
-            throw new IllegalArgumentException("invalid rggbMatrix height");
-        }
-        if(rggbMatrix[0].length != 2){
-            throw new IllegalArgumentException("invalid rggbMatrix width");
-        }
-        return rggbMatrix[0][0] | rggbMatrix[0][1] | rggbMatrix[1][1];
     }
 
     public static int[] convertToIntArray(ByteBuffer buffer){

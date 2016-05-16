@@ -24,7 +24,7 @@ public class DisplayRecordedInputApplication extends DefaultInstance {
         mSnapShot = readSavedInput();
         mSnapShot.ifPresent(snapShot -> {
             for(int index = 0; index < snapShot.mRgbFrames.size()-1; index += 2){
-                BufferedImage image = ByteBufferToImage.convertToImage(snapShot.mRgbFrames.get(index), snapShot.mRgbFrames.get(index+1));
+                BufferedImage image = ByteBufferToImage.convertRgbToImage(snapShot.mRgbFrames.get(index), snapShot.mRgbFrames.get(index+1));
                 mRgbCanvas.setImage(image);
                 mRgbCanvas.repaint();
                 sleep(500);
