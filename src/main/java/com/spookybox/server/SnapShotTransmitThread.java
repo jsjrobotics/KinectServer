@@ -4,8 +4,8 @@ import com.spookybox.camera.CameraManager;
 import com.spookybox.camera.CameraSnapShot;
 import com.spookybox.camera.KinectFrame;
 import com.spookybox.graphics.ByteBufferToImage;
+import com.spookybox.util.Pair;
 import com.spookybox.util.SelectiveReceiver;
-import com.sun.tools.javac.util.Pair;
 
 import java.awt.image.BufferedImage;
 import java.util.function.Function;
@@ -92,7 +92,7 @@ public class SnapShotTransmitThread extends Thread {
     }
 
     private Function<Pair<KinectFrame, KinectFrame>, BufferedImage> getKinectFrameConverter() {
-        return dualKinectFrame -> ByteBufferToImage.convertRgbToImage(dualKinectFrame.fst, dualKinectFrame.snd);
+        return dualKinectFrame -> ByteBufferToImage.convertRgbToImage(dualKinectFrame.mFirst, dualKinectFrame.mSecond);
     }
 
     public boolean readyToStart() {

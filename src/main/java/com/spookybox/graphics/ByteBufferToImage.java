@@ -24,7 +24,7 @@ public class ByteBufferToImage {
         int[] array = new int[input.size()/3];
         for(int index = 0; index < array.length; index++){
             int base = index*3;
-            array[index] = input.get(base) << 24| input.get(base+1) << 16 | input.get(base+2) << 8;
+            array[index] = input.get(base) << 16 | input.get(base+1) << 8 | input.get(base+2);
         }
 
         int width = kinectFrame.getMode().width;
@@ -47,7 +47,15 @@ public class ByteBufferToImage {
         int[] array = new int[422400];
         for(int index = 0; index < 422400; index+=2){
             int base = index*2;
-            array[index] = input.get(base) << 8| input.get(base+1);
+            int value = input.get(base) << 8| input.get(base+1);
+            int divider = 21845;
+            if(value < Short.MIN_VALUE +divider){
+                array[index] = value << 16;
+            } else if(value < Short.MIN_VALUE + divider*2){
+                array[index] = value << 8;
+            } else {
+                array[index] = 0x88 + value;
+            }
         }
         int width = kinectFrame.getMode().width;
         int height = kinectFrame.getMode().height;
