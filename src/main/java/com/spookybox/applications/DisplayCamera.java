@@ -33,7 +33,7 @@ public class DisplayCamera extends DefaultInstance {
                 snapShot -> {
                     KinectFrame kinectFrame = snapShot.mDepthFrames.get(0);
                     KinectFrame kinectFrame1 = snapShot.mDepthFrames.get(1);
-                    BufferedImage image = ByteBufferToImage.convertDepthToImage(kinectFrame, kinectFrame1);
+                    BufferedImage image = ByteBufferToImage.convertDepthToImage2(kinectFrame, kinectFrame1);
                     mDepthCanvas.setImage(image);
                     mDepthCanvas.repaint();
                 },
