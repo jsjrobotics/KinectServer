@@ -65,7 +65,7 @@ public class TcpClientMain {
     private void drawImage(CameraSnapShot cameraSnapShot){
         KinectFrame frame1 = cameraSnapShot.mRgbFrames.get(0);
         KinectFrame frame2 = cameraSnapShot.mRgbFrames.get(1);
-        mRgbCanvas.setImage(ByteBufferToImage.convertRgbToImage(frame1, frame2));
+        mRgbCanvas.setImage(ByteBufferToImage.rgbFramesToImage(frame1, frame2));
     }
 
 

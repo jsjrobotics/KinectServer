@@ -1,7 +1,6 @@
 package com.spookybox.applications;
 
 import com.spookybox.camera.CameraSnapShot;
-import com.spookybox.camera.Serialization;
 import com.spookybox.graphics.ByteBufferToImage;
 import com.spookybox.graphics.DisplayCanvas;
 import com.spookybox.camera.KinectFrame;
@@ -10,7 +9,6 @@ import com.spookybox.util.SelectiveReceiver;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.List;
 
 public class DisplayCamera extends DefaultInstance {
     private DisplayCanvas mRgbCanvas;
@@ -22,7 +20,7 @@ public class DisplayCamera extends DefaultInstance {
                 snapShot -> {
                     KinectFrame kinectFrame = snapShot.mRgbFrames.get(0);
                     KinectFrame kinectFrame1 = snapShot.mRgbFrames.get(1);
-                    BufferedImage image = ByteBufferToImage.convertRgbToImage(kinectFrame, kinectFrame1);
+                    BufferedImage image = ByteBufferToImage.rgbFramesToImage(kinectFrame, kinectFrame1);
                     mRgbCanvas.setImage(image);
                     mRgbCanvas.repaint();
                 },

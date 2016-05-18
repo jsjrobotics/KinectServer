@@ -92,7 +92,7 @@ public class SnapShotTransmitThread extends Thread {
     }
 
     private Function<Pair<KinectFrame, KinectFrame>, BufferedImage> getKinectFrameConverter() {
-        return dualKinectFrame -> ByteBufferToImage.convertRgbToImage(dualKinectFrame.mFirst, dualKinectFrame.mSecond);
+        return dualKinectFrame -> ByteBufferToImage.rgbFramesToImage(dualKinectFrame.mFirst, dualKinectFrame.mSecond);
     }
 
     public boolean readyToStart() {

@@ -16,27 +16,27 @@ public class ByteBufferToImage {
     private static final int RGB_FRAME_SIZE =  307200;
     private static final int DEPTH_FRAME_SIZE = 422400;
 
-    public static BufferedImage convertRgbToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
-        List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
-        List<Byte> kinectList2 = Serialization.byteBufferToByteList(kinectFrame1.getBuffer());
-        List<Byte> input = new ArrayList<>();
-        for(Byte b : kinectList1){
-            input.add(b);
-        }
-        for(Byte b : kinectList2){
-            input.add(b);
-        }
-
-        int[] array = byteListToRgb(input);
-        return rgbArrayToImage(kinectFrame.getMode(), array);
-    }
-
     private static BufferedImage rgbArrayToImage(FrameMode mode, int[] rgbArray){
         int width = mode.width;
         int height = mode.height;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         image.setRGB(0,0,width,height,rgbArray,0,width);
         return image;
+    }
+
+    public static BufferedImage rgbFramesToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
+        ByteBuffer buffer1 = kinectFrame.clone().getBuffer();
+        ByteBuffer buffer2 = kinectFrame1.clone().getBuffer();
+        byte[] input = new byte[buffer1.capacity() + buffer2.capacity()];
+        buffer1.get(input, 0, buffer1.capacity());
+        buffer2.get(input, buffer1.capacity(), buffer2.capacity());
+        int length = kinectFrame.getMode().height * kinectFrame.getMode().width;
+        int[] rgbArray = new int[length];
+        for(int index = 0; index < rgbArray.length; index++){
+            int base = index*3;
+            rgbArray[index] = input[base] <<  16 | input[base+1] << 8 | input[base+2];
+        }
+        return rgbArrayToImage(kinectFrame.getMode(), rgbArray);
     }
 
     private static int[] byteListToRgb(List<Byte> input){
