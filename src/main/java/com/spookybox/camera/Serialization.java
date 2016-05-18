@@ -166,4 +166,15 @@ public class Serialization {
         }
         return bytesRead;
     }
+
+    public static List<Short> byteListToShortList(List<Byte> byteStream) {
+        if(byteStream.size() %2 != 0){
+            throw new IllegalArgumentException("Byte stream size must be multiple of 2");
+        }
+        List<Short> result = new ArrayList<>();
+        for(int index = 0; index < byteStream.size(); index+=2){
+            result.add(byteListToShort(byteStream.subList(index,index+2)));
+        }
+        return result;
+    }
 }

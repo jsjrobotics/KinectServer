@@ -1,6 +1,7 @@
 package com.spookybox.applications;
 
 import com.spookybox.camera.CameraSnapShot;
+import com.spookybox.camera.Serialization;
 import com.spookybox.graphics.ByteBufferToImage;
 import com.spookybox.graphics.DisplayCanvas;
 import com.spookybox.camera.KinectFrame;
@@ -9,6 +10,7 @@ import com.spookybox.util.SelectiveReceiver;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.List;
 
 public class DisplayCamera extends DefaultInstance {
     private DisplayCanvas mRgbCanvas;
@@ -33,7 +35,7 @@ public class DisplayCamera extends DefaultInstance {
                 snapShot -> {
                     KinectFrame kinectFrame = snapShot.mDepthFrames.get(0);
                     KinectFrame kinectFrame1 = snapShot.mDepthFrames.get(1);
-                    BufferedImage image = ByteBufferToImage.convertDepthToImage2(kinectFrame, kinectFrame1);
+                    BufferedImage image = ByteBufferToImage.convertDepthToImage3(kinectFrame);
                     mDepthCanvas.setImage(image);
                     mDepthCanvas.repaint();
                 },
@@ -48,7 +50,7 @@ public class DisplayCamera extends DefaultInstance {
         mDepthCanvas = canvases[1];
         mCameraManager.registerSnapshotReceiver(getDepthFramesReceiver());
         mCameraManager.registerSnapshotReceiver(getRgbFramesReceiver());
-        mServer = new ServerMain(mCameraManager);
+        //mServer = new ServerMain(mCameraManager);
         mCameraManager.startCapture();
         try {
             System.in.read();

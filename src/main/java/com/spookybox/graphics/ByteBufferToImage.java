@@ -2,15 +2,19 @@ package com.spookybox.graphics;
 
 import com.spookybox.camera.KinectFrame;
 import com.spookybox.camera.Serialization;
-import com.spookybox.util.SerializationUtils;
 import org.openkinect.freenect.FrameMode;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 public class ByteBufferToImage {
+
+    private static final int RGB_FRAME_SIZE =  307200;
+    private static final int DEPTH_FRAME_SIZE = 422400;
 
     public static BufferedImage convertRgbToImage(KinectFrame kinectFrame, KinectFrame kinectFrame1){
         List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
@@ -34,11 +38,15 @@ public class ByteBufferToImage {
         image.setRGB(0,0,width,height,rgbArray,0,width);
         return image;
     }
+
     private static int[] byteListToRgb(List<Byte> input){
-        int[] array = new int[input.size()/3];
+        int[] array = new int[RGB_FRAME_SIZE];
         for(int index = 0; index < array.length; index++){
             int base = index*3;
-            array[index] = input.get(base) << 16 | input.get(base+1) << 8 | input.get(base+2);
+            int red = input.get(base) << 16 & 0xFF0000;
+            int green = input.get(base+1) << 8 & 0xFF00;
+            int blue = input.get(base+2) & 0xFF;
+            array[index] = red | green | blue;
         }
         return array;
     }
@@ -53,10 +61,10 @@ public class ByteBufferToImage {
         for(Byte b : kinectList2){
             input.add(b);
         }
-        int[] array = new int[422400];
-        for(int index = 0; index < 422400; index+=2){
+        int[] array = new int[DEPTH_FRAME_SIZE];
+        for(int index = 0; index < array.length; index+=2){
             int base = index*2;
-            int value = input.get(base) << 8| input.get(base+1);
+            int value = (input.get(base) << 8) | input.get(base+1);
             int divider = 21845;
             if(value < Short.MIN_VALUE +divider){
                 array[index] = value << 16;
@@ -74,34 +82,73 @@ public class ByteBufferToImage {
     }
 
     public static BufferedImage convertDepthToImage2(KinectFrame kinectFrame, KinectFrame kinectFrame1) {
-        List<Byte> kinectList1 = Serialization.byteBufferToByteList(kinectFrame.getBuffer());
-        List<Byte> kinectList2 = Serialization.byteBufferToByteList(kinectFrame1.getBuffer());
-        List<Byte> input = new ArrayList<>();
-        for(Byte b : kinectList1){
-            input.add(b);
+        List<Short> depthStream =  new ArrayList<>();
+        ShortBuffer buffer = kinectFrame.getBuffer().asShortBuffer();
+        for(int index = 0; index < 640*480; index++){
+            depthStream.add(buffer.get(index));
         }
-        for(Byte b : kinectList2){
-            input.add(b);
-        }
-        List<Byte> rgb = depthToRgbStream(input);
-        int[] array = byteListToRgb(rgb);
+        List<Byte> rgbStream = depthToRgbStream(depthStream);
+        int[] array = byteListToRgb(rgbStream);
         return rgbArrayToImage(kinectFrame.getMode(), array);
     }
 
-    public static int[] convertToIntArray(ByteBuffer buffer){
-        ArrayList<Integer> result = new ArrayList<>();
-        for(int index = 0; index < buffer.capacity(); index+= 4){
-            int data = buffer.get(index) << 24 |
-                    buffer.get(index+1) << 16 |
-                    buffer.get(index+2) << 8 |
-                    buffer.get(index+3);
-            result.add(data);
+    private static void debugFrame(KinectFrame kinectFrame){
+        ByteBuffer buffer = kinectFrame.getBuffer();
+        byte[] debugByteArray = new byte[buffer.capacity()];
+        buffer.get(debugByteArray);
+
+        ShortBuffer shortBuffer = buffer.asShortBuffer();
+        short[] debugShortArray = new short[shortBuffer.capacity()];
+        shortBuffer.get(debugShortArray);
+    }
+
+    public static BufferedImage convertDepthToImage3(KinectFrame kinectFrame){
+        debugFrame(kinectFrame);
+        BitSet bits = BitSet.valueOf(kinectFrame.getBuffer());
+        List<Short> values = new ArrayList<>();
+        for(int index = 0; index < 640*480*11; index += 11){
+            boolean bit1 = bits.get(index);
+            boolean bit2 = bits.get(index + 1);
+            boolean bit3 = bits.get(index + 2);
+            boolean bit4 = bits.get(index + 3);
+            boolean bit5 = bits.get(index + 4);
+            boolean bit6 = bits.get(index + 5);
+            boolean bit7 = bits.get(index + 6);
+            boolean bit8 = bits.get(index + 7);
+            boolean bit9 = bits.get(index + 8);
+            boolean bit10 = bits.get(index + 9);
+            boolean bit11= bits.get(index + 10);
+
+            short value = leftShiftBit(bit1, 10);
+            value |= leftShiftBit(bit2, 9);
+            value |= leftShiftBit(bit3, 8);
+            value |= leftShiftBit(bit4, 7);
+            value |= leftShiftBit(bit5, 6);
+            value |= leftShiftBit(bit6, 5);
+            value |= leftShiftBit(bit7, 4);
+            value |= leftShiftBit(bit8, 3);
+            value |= leftShiftBit(bit9, 2);
+            value |= leftShiftBit(bit10, 1);
+            value |= leftShiftBit(bit11, 0);
+            if(value < 0 || value >= 2048){
+                System.out.println("Invalid value read");
+                values.add((short) 0);
+            }
+            else {
+                values.add(value);
+            }
         }
-        int[] array = new int[result.size()];
-        for(int index = 0; index < array.length; index++){
-            array[index] = result.get(index);
+        List<Byte> rgbStream = depthToRgbStream(values);
+        int[] array = byteListToRgb(rgbStream);
+        return rgbArrayToImage(kinectFrame.getMode(), array);
+
+    }
+
+    public static short leftShiftBit(boolean isSet, int leftShift) {
+        if(!isSet){
+            return 0;
         }
-        return array;
+        return (short) (1 << leftShift);
     }
 
     /*  Following Functions From glview.c */
@@ -115,11 +162,14 @@ public class ByteBufferToImage {
         return matrix;
     }
 
-    private static List<Byte> depthToRgbStream(List<Byte> input){
+    private static List<Byte> depthToRgbStream(List<Short> input){
         int[] gammaMatrix = getGammaMatrix();
         List<Byte> rgbList = new ArrayList<>(640*480*3);
         for (int i=0; i<640*480; i++) {
-            short value = (short) (input.get(i*2) | input.get(i*2+1));
+            int value = input.get(i);
+            if(value < 0 || value >= 2048){
+                throw new IllegalArgumentException("Invalid value read -->"+value);
+            }
             int pval = gammaMatrix[value];
             int lb = pval & 0xff;
             switch (pval>>8) {

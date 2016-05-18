@@ -109,7 +109,7 @@ public class CameraManager {
 
     private void startDepthCapture() {
         Object awaitStart = new Object();
-        mKinect.setDepthFormat(DepthFormat.MM);
+        mKinect.setDepthFormat(DepthFormat.D11BIT);
         mDepthThread = Optional.of(new Thread(() -> {
             DepthHandler receiver = (mode, frame, timestamp) -> {
                 if(isTerminating || frame == null){
