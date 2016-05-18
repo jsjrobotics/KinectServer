@@ -94,12 +94,15 @@ public class ByteBufferToImage {
 
     private static void debugFrame(KinectFrame kinectFrame){
         ByteBuffer buffer = kinectFrame.getBuffer();
+        ByteBuffer clone = kinectFrame.clone().getBuffer();
         byte[] debugByteArray = new byte[buffer.capacity()];
         buffer.get(debugByteArray);
 
-        ShortBuffer shortBuffer = buffer.asShortBuffer();
+        ShortBuffer shortBuffer = clone.asShortBuffer();
         short[] debugShortArray = new short[shortBuffer.capacity()];
         shortBuffer.get(debugShortArray);
+
+
     }
 
     public static BufferedImage convertDepthToImage3(KinectFrame kinectFrame){
@@ -167,9 +170,6 @@ public class ByteBufferToImage {
         List<Byte> rgbList = new ArrayList<>(640*480*3);
         for (int i=0; i<640*480; i++) {
             int value = input.get(i);
-            if(value < 0 || value >= 2048){
-                throw new IllegalArgumentException("Invalid value read -->"+value);
-            }
             int pval = gammaMatrix[value];
             int lb = pval & 0xff;
             switch (pval>>8) {
