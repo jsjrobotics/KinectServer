@@ -35,7 +35,7 @@ import java.nio.DoubleBuffer;
 public class Freenect implements Library {
 	static {
 		NativeLibrary.addSearchPath("freenect", "/usr/lib/x86_64-linux-gnu/");
-		//NativeLibrary.addSearchPath("freenect", "/usr/local/lib");
+		NativeLibrary.addSearchPath("freenect", "/usr/local/lib");
 		NativeLibrary instance = NativeLibrary.getInstance("freenect");
 		System.err.println("Loaded " + instance.getName() + " from " + instance.getFile().getAbsolutePath());
 		Native.register(instance);
