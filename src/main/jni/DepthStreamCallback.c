@@ -2,7 +2,14 @@
 #include "DepthStreamCallback.h"
 
 JNIEXPORT void JNICALL Java_com_spookybox_freenect_DepthStreamCallback_depthCallback (JNIEnv * env, jobject thiz, jobject byteBuffer) {
+    jclass thisClass = (*env)->GetObjectClass(env, thiz);
 
+   // Get the Method ID for method "callback", which takes no arg and return void
+   jmethodID midCallBack = (*env)->GetMethodID(env, thisClass, "array", "()V");
+}
+
+JNIEXPORT void JNICALL Java_com_spookybox_freenect_DepthStreamCallback_depthCallbackArray (JNIEnv * env, jobject thiz, jbytearray bytes) {
+    depth_cb(bytes);
 }
 
 void depth_cb(void *v_depth)
