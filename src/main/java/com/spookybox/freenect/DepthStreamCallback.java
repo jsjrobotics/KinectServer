@@ -1,18 +1,25 @@
 package com.spookybox.freenect;
 
-import org.openkinect.freenect.FrameMode;
+import com.spookybox.camera.KinectFrame;
 
 import java.nio.ByteBuffer;
 
 public class DepthStreamCallback {
+    private static final int SIZE_OF_SHORT = 2;
+    private static final ByteBuffer mGammaBuffer;
+
     static {
         System.loadLibrary("freenectDepth");
+        mGammaBuffer = ByteBuffer.allocateDirect(2048 * SIZE_OF_SHORT);
+        initGammaArray(mGammaBuffer);
     }
 
-    private native void depthCallback(FrameMode mode, ByteBuffer frame, int timestamp);
-    private native void depthCallbackArray(byte[] frame);
-
-    public static void main(String[] args) {
-        new DepthStreamCallback().depthCallback(null, null, 0);  // invoke the native method
+    public void depthCallback(ByteBuffer depthBuffer, ByteBuffer rgbResult){
+        depthCallback(mGammaBuffer, depthBuffer, rgbResult);
     }
+
+    private static native void depthCallback(ByteBuffer gammaArray, ByteBuffer frame, ByteBuffer resultBuffer);
+    private static native void initGammaArray(ByteBuffer arrayBuffer);
+
+
 }

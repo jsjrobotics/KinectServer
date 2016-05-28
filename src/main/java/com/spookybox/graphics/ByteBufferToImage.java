@@ -12,7 +12,7 @@ import java.util.BitSet;
 import java.util.List;
 
 public class ByteBufferToImage {
-
+    public static final int SCREEN_RESOLUTION = 640 * 480;
     private static final int RGB_FRAME_SIZE =  307200;
     private static final int DEPTH_FRAME_SIZE = 422400;
 
@@ -35,6 +35,16 @@ public class ByteBufferToImage {
         for(int index = 0; index < rgbArray.length; index++){
             int base = index*3;
             rgbArray[index] = input[base] <<  16 | input[base+1] << 8 | input[base+2];
+        }
+        return rgbArrayToImage(kinectFrame.getMode(), rgbArray);
+    }
+
+    public static BufferedImage depthFramesToImage(KinectFrame kinectFrame, ByteBuffer pixelBuffer){
+        int length = pixelBuffer.capacity() /3;
+        int[] rgbArray = new int[length];
+        for(int index = 0; index < rgbArray.length; index++){
+            int base = index*3;
+            rgbArray[index] = pixelBuffer.get(base) <<  16 | pixelBuffer.get(base+1) << 8 | pixelBuffer.get(base+2);
         }
         return rgbArrayToImage(kinectFrame.getMode(), rgbArray);
     }
